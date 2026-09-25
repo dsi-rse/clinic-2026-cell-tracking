@@ -1,0 +1,8 @@
+# Copy this file to config/data_paths.yaml and edit the local/cluster paths.
+# config/data_paths.yaml is ignored by Git.
+
+ctc_root: /path/to/shared/project/data/ctc
+amanda_data_root: /path/to/shared/project/data/uchicago/amanda
+derived_data_root: /path/to/shared/project/data/derived
+model_root: /path/to/shared/project/models
+run_root: /path/to/shared/project/runs
