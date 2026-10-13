@@ -85,6 +85,9 @@ def main() -> None:
 
     config = MainConfig()
     config.data_config.working_dir = args.output_dir
+    config.tracking_config.solver_name = "GUROBI"
+
+    print(f"Requested solver: {config.tracking_config.solver_name}")
 
     tracker = Tracker(config=config)
     tracker.track(labels=labels)
