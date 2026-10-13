@@ -94,7 +94,10 @@ def main() -> None:
 
     tracks, _ = tracker.to_tracks_layer()
     tracks.to_csv(args.output_dir / "tracks.csv", index=False)
-    tracker.to_zarr(args.output_dir / "segments.zarr")
+    tracker.to_zarr(
+        store_or_path=args.output_dir / "segments.zarr",
+        overwrite=True,
+    )
 
     print(f"Tracks: {len(tracks)}")
     print(f"Output directory: {args.output_dir}")
