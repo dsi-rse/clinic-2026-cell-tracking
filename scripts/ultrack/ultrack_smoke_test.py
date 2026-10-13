@@ -7,9 +7,9 @@ import numpy as np
 import tifffile
 from ultrack import MainConfig, Tracker
 
-
 MIN_FRAMES = 5
 MAX_FRAMES = 10
+EXPECTED_LABEL_DIMENSIONS = 3
 
 
 def parse_args() -> argparse.Namespace:
@@ -52,7 +52,7 @@ def load_labels(input_dir: Path) -> np.ndarray:
 
     labels = tifffile.imread(label_paths)
 
-    if labels.ndim != 3:
+    if labels.ndim != EXPECTED_LABEL_DIMENSIONS:
         raise ValueError(
             f"Expected labels shaped (time, y, x), but got {labels.shape}."
         )
@@ -61,10 +61,7 @@ def load_labels(input_dir: Path) -> np.ndarray:
     print(f"Label data type: {labels.dtype}")
 
     for time, frame in enumerate(labels):
-        print(
-            f"Frame {time}: minimum={frame.min()}, "
-            f"maximum={frame.max()}"
-        )
+        print(f"Frame {time}: minimum={frame.min()}, maximum={frame.max()}")
 
     return labels
 
