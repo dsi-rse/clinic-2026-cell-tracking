@@ -1,0 +1,11 @@
+name: cell-tracking-ultrack
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.12
+  - pip
+  - "pyqt>=5.15.9,<6"
+  - pip:
+      - ultrack==0.8.0
