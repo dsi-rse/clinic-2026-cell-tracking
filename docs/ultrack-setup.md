@@ -29,7 +29,8 @@ verification are complete.
       - [Input inspection evidence](#input-inspection-evidence)
       - [Solver evidence](#solver-evidence)
       - [Output files](#output-files)
-  - [Issue #2 acceptance criteria](#issue-2-acceptance-criteria)
+    - [Reproducing the smoke test](#reproducing-the-smoke-test)
+    - [Issue #2 acceptance criteria](#issue-2-acceptance-criteria)
 
 ## 1. Setup Notes
 
@@ -40,8 +41,6 @@ the optional Gurobi solver on the DSI cluster.
 
 | Item | Value |
 | --- | --- |
-| Cluster compute node used for setup verification | `i001-ds` |
-| Cluster compute node used for smoke-test debugging | `j002-ds` |
 | Micromamba environment | `cell-tracking-ultrack` |
 | Python | `3.12.15` |
 | Python compiler | GCC `15.3.0` |
@@ -119,15 +118,32 @@ A successful check reports that the Gurobi module was imported, an academic
 license was found, and a Gurobi environment was created. Do not copy the
 license ID, account email, access ID, or secret into the repository.
 
+```text
+Gurobi module imported successfully.
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value <xxxxxxx>
+Academic license <xxxxxxx> - for non-commercial use only - registered to user@uchicago.edu
+Gurobi environment created successfully.
+```
+
 Ultrack solves through Python-MIP, so verify that interface separately:
 
 ```bash
 python -c "from mip import GUROBI, Model; model = Model(solver_name=GUROBI); print(model.solver_name)"
 ```
 
-The expected final output is `GRB`. If `ultrack check_gurobi` succeeds but this
-command raises `mip.exceptions.InterfacingError`, Gurobi is installed but the
-interface used by Ultrack is not yet working.
+The expected final output is the following:
+```text
+Gurobi module imported successfully.
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value <xxxxxxx>
+Academic license <xxxxxxx> - for non-commercial use only - registered to user@uchicago.edu
+GRB
+```
+
+If `ultrack check_gurobi` succeeds but this command raises `mip.exceptions.InterfacingError`, Gurobi is installed but the interface used by Ultrack is not yet working.
 
 ### Verify the installation
 
@@ -391,7 +407,7 @@ Output directory: <PROJECT_DATA_ROOT>/runs/ultrack/ultrack-smoke-test
 
 #### Output files
 
-The clean rerun produced the following artifacts:
+The run produced the following artifacts:
 
 ```text
 input-labels-preview.tif
@@ -401,6 +417,53 @@ segments.zarr/
 
 <!-- Optional: add a short `ls -lh` or `find` excerpt here after the clean run.
 Do not commit the generated run directory. -->
+
+### Reproducing the smoke test
+
+From the repository root on the cluster:
+
+1. If using Gurobi, complete
+   [Configure Gurobi for cluster use](#configure-gurobi-for-cluster-use).
+
+2. Request a compute node with enough time for database creation:
+
+   ```bash
+   srun -p general --time=02:00:00 --mem=16G --pty /bin/bash
+   ```
+
+3. On the compute node, create and activate the tested environment:
+
+   ```bash
+   source ~/.bashrc
+   micromamba create --file environments/ultrack.yaml
+   micromamba activate cell-tracking-ultrack
+   ```
+
+   If using Gurobi, run both verification commands from the setup section and
+   confirm that the Python-MIP check prints `GRB`.
+
+4. Run the smoke test, replacing `<PROJECT_DATA_ROOT>` with the team's approved
+   cluster data location:
+
+   ```bash
+   python scripts/ultrack/ultrack_smoke_test.py \
+       --input-dir <PROJECT_DATA_ROOT>/ctc/Fluo-N2DH-GOWT1/01_ST/SEG \
+       --output-dir <PROJECT_DATA_ROOT>/runs/ultrack/ultrack-smoke-test
+   ```
+
+5. Confirm that the terminal reports an optimal solution, 230 tracks, and a
+   complete 10-of-10 segmentation export. Verify that the output directory
+   contains:
+
+   ```text
+   input-labels-preview.tif
+   tracks.csv
+   segments.zarr/
+   ```
+
+Use a new or empty output directory when reproducing the test so an existing
+Ultrack database does not interfere with the run. Generated data and private
+license files must not be committed to GitHub.
 
 ### Issue #2 acceptance criteria
 
