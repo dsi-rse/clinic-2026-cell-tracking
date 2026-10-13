@@ -477,7 +477,7 @@ license files must not be committed to GitHub.
   succeeded, and where its output was stored.
 - [x] Document significant errors or blockers and the action taken for each
   one.
-- [ ] Add this reproducible setup note and the smoke-test results to GitHub.
+- [x] Add this reproducible setup note and the smoke-test results to GitHub.
 
 The final item can be checked after this document and its label screenshot are
 committed and pushed to the issue branch.
