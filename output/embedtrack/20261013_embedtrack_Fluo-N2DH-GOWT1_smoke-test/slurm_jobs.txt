@@ -1,0 +1,13 @@
+JobID           JobName      State ExitCode    Elapsed        NodeList 
+------------ ---------- ---------- -------- ---------- --------------- 
+2148512      et_gowt1_+  COMPLETED      0:0   00:00:30            k002 
+2148535      et_gowt1_+  COMPLETED      0:0   00:00:08         i001-ds 
+2148546      et_gowt1_+     FAILED      1:0   00:00:44            k003 
+2149864      et_gowt1_+     FAILED      1:0   00:01:52            p002 
+2149885      et_gowt1_+     FAILED      1:0   00:00:18            p002 
+2149899      et_gowt1_+     FAILED      1:0   00:00:24            p002 
+2149931      et_gowt1_+     FAILED      1:0   00:25:23            k002 
+2150097      et_gowt1_+     FAILED      1:0   00:07:22         j005-ds 
+2150364      et_gowt1_+     FAILED      1:0   00:08:07         i001-ds 
+2150611      et_gowt1_+     FAILED      1:0   00:00:31            k003 
+2150626      et_gowt1_+  COMPLETED      0:0   00:19:24         j004-ds 

@@ -1,0 +1,24 @@
+31,42c31,32
+< DATA_SETS = [
+<     "Fluo-N2DH-SIM+",
+<     "Fluo-C2DL-MSC",
+<     "Fluo-N2DH-GOWT1",
+<     "PhC-C2DL-PSC",
+<     "BF-C2DL-HSC",
+<     "Fluo-N2DL-HeLa",
+<     "BF-C2DL-MuSC",
+<     "DIC-C2DH-HeLa",
+<     "PhC-C2DH-U373",
+< ]
+< N_EPOCHS = 15
+---
+> DATA_SETS = ["Fluo-N2DH-GOWT1"]
+> N_EPOCHS = 2
+72c62
+<         DISPLAY_IT = 1000
+---
+>         DISPLAY_IT = None
+78c68
+<         DISPLAY_IT = 200
+---
+>         DISPLAY_IT = None
