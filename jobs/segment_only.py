@@ -1,3 +1,5 @@
+"""Run KIT-GE (3) segmentation only (no tracking or eval) on Fluo-N2DL-HeLa."""
+
 import sys
 from pathlib import Path
 
@@ -7,8 +9,8 @@ REPO = Path(
     "/net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC"
 )
 sys.path.insert(0, str(REPO))
-from eval import EvalArgs
-from segmentation.inference.inference import inference_2d_ctc
+from eval import EvalArgs  # noqa: E402
+from segmentation.inference.inference import inference_2d_ctc  # noqa: E402
 
 ct, model_name, th_seed, th_cell = (
     "Fluo-N2DL-HeLa",
