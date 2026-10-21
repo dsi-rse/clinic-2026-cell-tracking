@@ -12,10 +12,17 @@ because it also applies to the other tracking methods in the project.
    - Compare the maps visually with sparse gold segmentation.
    - Run Ultrack segmentation, linking, and solving in separate cells.
 
+2. `02_hela_stardist_benchmark.ipynb`
+   - Load either a five-frame check or the complete HeLa sequence 01.
+   - Generate instance labels with the pretrained StarDist
+     `2D_versatile_fluo` model.
+   - Convert labels to Ultrack foreground and contour inputs.
+   - Export the complete result in CTC format for benchmark evaluation.
+
 Planned follow-up notebooks:
 
-2. A documented `Fluo-C3DL-MDA231` subset run after the 2D workflow works.
-3. An optional `Fluo-N2DH-GOWT1` run if time permits.
+3. A documented `Fluo-C3DL-MDA231` subset run after the 2D workflow works.
+4. An optional `Fluo-N2DH-GOWT1` run if time permits.
 
 Once the interactive workflow is stable, reusable processing would be moved into a
 script under `scripts/ultrack/`. 
