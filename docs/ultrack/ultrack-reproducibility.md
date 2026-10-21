@@ -75,19 +75,25 @@ tracking environment is not changed. See
 
 ### Reproduction target
 
-The target is the StarDist row for File 1 in Table 3 of the ECCV 2024 Ultrack
-paper. The published workflow applies a pretrained StarDist fluorescence model
-and converts its labels to foreground and contour maps before running Ultrack.
+The targets are the StarDist rows for Files 1 and 2 in Table 3 of the ECCV 2024
+Ultrack paper. The published workflow applies a pretrained StarDist
+fluorescence model and converts its labels to foreground and contour maps
+before running Ultrack.
 
-| Metric | Published File 1 value | Reproduced value | Difference |
-| --- | ---: | ---: | ---: |
-| DET | Not reported | 0.897604 | Not applicable |
-| SEG | 0.724 | 0.701001 | -0.022999 |
-| TRA | 0.910 | 0.894289 | -0.015711 |
-| `OP_CTB` | 0.817 | 0.797645 | -0.019355 |
+| Sequence | Metric | Published value | Reproduced value | Difference |
+| --- | --- | ---: | ---: | ---: |
+| 01 | DET | Not reported | 0.897604 | Not applicable |
+| 01 | SEG | 0.724 | 0.701001 | -0.022999 |
+| 01 | TRA | 0.910 | 0.894289 | -0.015711 |
+| 01 | `OP_CTB` | 0.817 | 0.797645 | -0.019355 |
+| 02 | DET | Not reported | 0.923068 | Not applicable |
+| 02 | SEG | 0.818 | 0.816860 | -0.001140 |
+| 02 | TRA | 0.941 | 0.919480 | -0.021520 |
+| 02 | `OP_CTB` | 0.880 | 0.868170 | -0.011830 |
 
-These published values use the public CTC training sequence. The reproduction
-should be compared with this StarDist row, not with the stronger ensemble row.
+These published values use the public CTC training sequences. Each reproduction
+should be compared with the corresponding StarDist row, not with the stronger
+ensemble row.
 See [Published Ultrack Benchmarks](ultrack-benchmarks.md) for the source and
 comparison limits.
 
@@ -96,9 +102,9 @@ comparison limits.
 | Item | Recorded value |
 | --- | --- |
 | Dataset | `Fluo-N2DL-HeLa` |
-| Sequence | `01` |
-| Frames | `t000.tif` through `t091.tif` |
-| Number of frames | 92 |
+| Sequences | `01` and `02` |
+| Frames per sequence | `t000.tif` through `t091.tif` |
+| Number of frames per sequence | 92 |
 | Image shape | 700 x 1100 pixels |
 | Image type | `uint16` |
 | Python | 3.12.15 |
@@ -161,27 +167,29 @@ The notebook keeps segmentation, linking, and solving in separate cells. This
 makes it possible to diagnose a failed stage without rerunning StarDist
 inference or all preceding Ultrack stages.
 
-### Full-sequence run record
+### Full-sequence run records
 
-| Stage | Parallel setting | Recorded runtime |
-| --- | ---: | ---: |
-| StarDist inference | CPU inference | 118.60 seconds |
-| Label-to-contour conversion | CPU | approximately 4 seconds |
-| Ultrack segmentation hypotheses | 4 workers | 1,352.83 seconds |
-| Ultrack linking | 1 worker | 701.13 seconds |
-| Ultrack optimization | 4 Gurobi threads | 14.31 seconds |
+| Stage | Parallel setting | Sequence 01 runtime | Sequence 02 runtime |
+| --- | ---: | ---: | ---: |
+| StarDist inference | CPU inference | 118.60 seconds | 132.27 seconds |
+| Label-to-contour conversion | CPU | approximately 4 seconds | approximately 5 seconds |
+| Ultrack segmentation hypotheses | 4 workers | 1,352.83 seconds | 796.51 seconds |
+| Ultrack linking | 1 worker | 701.13 seconds | 371.59 seconds |
+| Ultrack optimization | 4 Gurobi threads | 14.31 seconds | 167.90 seconds |
 
 The long segmentation and linking times are expected for the complete sequence.
 Progress can remain unchanged while a worker is processing a frame, so a
 stationary progress bar alone does not show that the process is deadlocked.
 
-The completed export contained:
+Both completed exports contained 92 CTC masks, `mask000.tif` through
+`mask091.tif`, and a `res_track.txt` lineage file. Their track-table and lineage
+counts differed:
 
-- 92 CTC masks, `mask000.tif` through `mask091.tif`;
-- 8,448 rows in the Ultrack track table;
-- 290 unique track IDs;
-- 42 entries in the lineage graph; and
-- a `res_track.txt` lineage file.
+| Output | Sequence 01 | Sequence 02 |
+| --- | ---: | ---: |
+| Track-table rows | 8,448 | 26,342 |
+| Unique track IDs | 290 | 836 |
+| Lineage graph entries | 42 | 182 |
 
 These counts confirm that the workflow completed and produced a structurally
 complete result. They do not measure tracking accuracy; the CTC metrics provide
@@ -189,8 +197,8 @@ that assessment.
 
 ### Output layout
 
-The full run uses a descriptive run directory and exports its CTC submission
-under `01_RES`:
+Each full run uses a descriptive run directory and exports its CTC submission
+under the sequence-specific result name:
 
 ```text
 <ULTRACK_RUN_ROOT>/hela-seq01-full-stardist/
@@ -203,6 +211,17 @@ under `01_RES`:
     ├── ...
     ├── mask091.tif
     └── res_track.txt
+
+<ULTRACK_RUN_ROOT>/hela-seq02-full-stardist/
+├── data.db
+├── segments.zarr/
+├── stardist_labels/
+├── tracks.csv
+└── 02_RES/
+    ├── mask000.tif
+    ├── ...
+    ├── mask091.tif
+    └── res_track.txt
 ```
 
 The earlier five-frame check uses `subset_RES` instead. This name prevents a
@@ -210,36 +229,45 @@ subset from being mistaken for a complete CTC sequence during evaluation.
 
 ### Evaluation results
 
-The complete `01_RES` output passed structural validation and was evaluated
-with the pinned `py-ctcmetrics` 1.3.3 environment. The evaluation produced:
+The complete `01_RES` and `02_RES` outputs passed structural validation and
+were evaluated with the pinned `py-ctcmetrics` 1.3.3 environment. The
+evaluations produced:
 
-| Metric | Value |
-| --- | ---: |
-| Valid | 1 |
-| DET | 0.897604 |
-| SEG | 0.701001 |
-| TRA | 0.894289 |
-| `OP_CTB` | 0.797645 |
+| Metric | Sequence 01 | Sequence 02 |
+| --- | ---: | ---: |
+| Valid | 1 | 1 |
+| DET | 0.897604 | 0.923068 |
+| SEG | 0.701001 | 0.816860 |
+| TRA | 0.894289 | 0.919480 |
+| `OP_CTB` | 0.797645 | 0.868170 |
 
 Evaluation was much faster than the tracking workflow because it operated on
 the completed masks and lineage graph. It did not repeat StarDist inference,
 segmentation-hypothesis generation, linking, or optimization.
 
-The reproduced SEG, TRA, and `OP_CTB` values are respectively 0.022999,
-0.015711, and 0.019355 below the published StarDist values. This is a close
-reproduction, but the small differences should not be treated as random error
-without further evidence. Possible contributors include StarDist, TensorFlow,
-and Ultrack version differences; preprocessing details; model thresholds; and
-Ultrack defaults that were not fully specified in the publication.
+For sequence 01, the reproduced SEG, TRA, and `OP_CTB` values are respectively
+0.022999, 0.015711, and 0.019355 below the published StarDist values. For
+sequence 02, they are respectively 0.001140, 0.021520, and 0.011830 below the
+published values. Sequence 02 therefore nearly reproduces the published
+segmentation score, while its larger difference is in tracking.
+
+The results are numerically close to both published rows, but the differences
+should not be treated as random error without further evidence. Possible
+contributors include StarDist, TensorFlow, and Ultrack version differences;
+preprocessing details; model thresholds; and Ultrack defaults that were not
+fully specified in the publication.
 
 The full JSON and CSV reports remain with the run outputs on cluster storage.
 Only a sanitized metric summary should be committed because the raw reports
 record absolute cluster paths.
 
-The executable record for this experiment is
-[`02_hela_stardist_benchmark.ipynb`](../../notebooks/ultrack/02_hela_stardist_benchmark.ipynb).
-Plots remain in the notebook, but verbose solver output are cleared
-before committing because it can contain identifying license information.
+The executable records for these experiments are:
+
+- [`02_hela_stardist_seq01_benchmark.ipynb`](../../notebooks/ultrack/02_hela_stardist_seq01_benchmark.ipynb); and
+- [`02_hela_stardist_seq02_benchmark.ipynb`](../../notebooks/ultrack/02_hela_stardist_seq02_benchmark.ipynb).
+
+Plots remain in the notebooks, but verbose solver outputs are cleared before
+committing because they can contain identifying license information.
 
 ## Adding another dataset
 

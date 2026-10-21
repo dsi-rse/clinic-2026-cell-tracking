@@ -66,7 +66,7 @@ shows missed or incomplete detections for some dim nuclei. The contour maps
 retain internal boundary information that Ultrack can use when considering
 alternative segmentation hypotheses.
 
-![Raw images, foreground maps, contour maps, and foreground overlays](../../notebooks/ultrack/docs/ultrack/figures/initial-subset/foreground-contours.png)
+![Raw images, foreground maps, contour maps, and foreground overlays](../images/foreground-contours.png)
 
 ## Diagnostic comparison with sparse gold segmentation
 
@@ -103,7 +103,7 @@ very few annotations and include missed objects. Because the annotations are
 sparse and uneven across frames, these values are diagnostic rather than a
 final segmentation score.
 
-![Gold and detected-foreground boundary comparison](../../notebooks/ultrack/docs/ultrack/figures/initial-subset/gold-boundaries-overlay.png)
+![Gold and detected-foreground boundary comparison](../images/gold-boundaries-overlay.png)
 
 This comparison also has two important limitations:
 
@@ -156,7 +156,7 @@ The result labels align with many of the brighter visible nuclei in the
 inspected frame. Dimmer nuclei that were absent from the foreground input could
 not be recovered by the tracking stage.
 
-![Ultrack result labels and overlay](../../notebooks/ultrack/docs/ultrack/figures/initial-subset/ultrack-labels-over-rows.png)
+![Ultrack result labels and overlay](../images/ultrack-labels-over-rows.png)
 
 The CTC export starts at `mask000.tif`, so output frame `000` corresponds to
 original raw frame `012` for this subset. The earlier attempt passed the integer
