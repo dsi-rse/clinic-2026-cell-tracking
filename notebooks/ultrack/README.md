@@ -24,10 +24,20 @@ because it also applies to the other tracking methods in the project.
    - Inspect the eight frames with sparse gold segmentation.
    - Export and evaluate the complete 92-frame result.
 
-Planned follow-up notebooks:
+4. `03_mda231_raw_to_tracks.ipynb`
+   - Run an exploratory three-frame 3D subset directly from the raw images.
+   - Inspect middle z-slices, sparse gold slices, and Ultrack result labels.
+   - Treat this as an additional experiment, not as a reproduction of the
+     published U-Net benchmark.
 
-4. A documented `Fluo-C3DL-MDA231` subset run after the 2D workflow works.
-5. An optional `Fluo-N2DH-GOWT1` run if time permits.
+5. `03_mda231_seq01_benchmark.ipynb`
+   - Document the authors' published 3D U-Net foreground-and-boundary workflow.
+   - Validate the official repository, pretrained checkpoint, raw sequence,
+     and resulting CTC output.
+   - Keep public-training evaluation separate from the published hidden-test
+     benchmark values.
+
+Planned follow-up: an optional `Fluo-N2DH-GOWT1` run if time permits.
 
 Once the interactive workflow is stable, reusable processing would be moved into a
 script under `scripts/ultrack/`. 

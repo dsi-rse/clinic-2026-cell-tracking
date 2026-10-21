@@ -45,3 +45,70 @@ By default, the script writes `ctc_metrics.json` and `ctc_metrics.csv` beneath
 `<result parent>/evaluation/01_RES`. Use `--output-dir` to select a different
 location. Large result masks and private cluster paths remain outside Git; only
 sanitized summary tables should be committed.
+
+## Reusable 2D Ultrack benchmark
+
+[`ultrack/run_2d_benchmark.py`](ultrack/run_2d_benchmark.py) applies one of
+three segmentation methods to a 2D CTC sequence, converts the instance labels
+to the same Ultrack foreground/contour representation, runs the common Ultrack
+pipeline, and exports a CTC result. Supported methods are `stardist`,
+`watershed`, and `cellpose`.
+
+Install this project in the active environment before running the script:
+
+```bash
+python -m pip install -e .
+```
+
+Always start with a five-frame labels-only check. For watershed:
+
+```bash
+python scripts/ultrack/run_2d_benchmark.py \
+    --input-dir <CTC_ROOT>/ctc/Fluo-N2DL-HeLa/01 \
+    --output-dir <ULTRACK_RUN_ROOT>/hela-seq01-t012-016-watershed-check \
+    --sequence 01 \
+    --method watershed \
+    --frame-start 12 \
+    --frame-stop 17 \
+    --labels-only
+```
+
+Inspect the saved `input_labels` before running the complete workflow. The
+watershed defaults are explicit starting values, not parameters reported by
+the paper. Adjust them on the small check and record any changed values.
+
+Cellpose must remain on version 3 to use the paper's pretrained `cyto2` model;
+Cellpose 4 uses a different model family. Create its separate environment:
+
+```bash
+micromamba create --file environments/ultrack-cellpose.yaml
+micromamba activate cell-tracking-ultrack-cellpose
+python -m pip install -e .
+```
+
+The recipe provides the reproducible `cyto2` software version but does not
+guarantee a CUDA-enabled PyTorch build. Use `--cellpose-gpu` only after checking
+that `torch.cuda.is_available()` returns `True`; otherwise leave the flag out.
+
+Set the shared model cache before the first Cellpose import, then run the same
+five-frame check:
+
+```bash
+export CELLPOSE_LOCAL_MODELS_PATH=<CTC_ROOT>/models/cellpose-cache
+
+python scripts/ultrack/run_2d_benchmark.py \
+    --input-dir <CTC_ROOT>/ctc/Fluo-N2DL-HeLa/01 \
+    --output-dir <ULTRACK_RUN_ROOT>/hela-seq01-t012-016-cellpose-check \
+    --sequence 01 \
+    --method cellpose \
+    --frame-start 12 \
+    --frame-stop 17 \
+    --cellpose-model-cache "$CELLPOSE_LOCAL_MODELS_PATH" \
+    --labels-only
+```
+
+Remove `--frame-start`, `--frame-stop`, and `--labels-only` to run a complete
+sequence after inspecting the subset. A complete run exports `01_RES` or
+`02_RES`; a partial run exports `subset_RES` so it cannot be confused with a
+benchmark result. Every run also writes `run_report.json` with package
+versions, parameters, runtimes, and output counts.

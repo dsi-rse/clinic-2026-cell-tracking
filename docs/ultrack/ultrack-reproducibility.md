@@ -7,10 +7,38 @@ It is intended to grow as additional datasets and segmentation inputs are
 tested. Each dataset section should state exactly what was reproduced, what was
 changed, and which comparisons are valid.
 
-The first complete experiment uses `Fluo-N2DL-HeLa` sequence 01 with a
-pretrained StarDist model. No model was trained or fine-tuned during this run.
-StarDist performed inference to create instance labels, and Ultrack used those
-labels to construct and select tracks.
+The first complete experiments use both `Fluo-N2DL-HeLa` training sequences
+with a pretrained StarDist model. No model was trained or fine-tuned during
+these runs. StarDist performed inference to create instance labels, and
+Ultrack used those labels to construct and select tracks.
+
+The 3D `Fluo-C3DL-MDA231` work has two distinct methodologies. The project
+first runs a small raw-image baseline to confirm that the 3D Ultrack pipeline
+works. The published benchmark instead uses a trained 3D U-Net and requires a
+separate GPU environment. These experiments are documented separately so the
+raw baseline is not mistaken for a reproduction of the published result.
+
+## Methodology and status overview
+
+The ECCV paper used or compared several segmentation inputs. Only methods
+actually run by this project are marked as reproduced or in progress.
+
+| Dataset | Segmentation input | Role | Project status | Valid comparison |
+| --- | --- | --- | --- | --- |
+| `Fluo-N2DL-HeLa` | Watershed | Published single-method comparator | Not run | Published values only |
+| `Fluo-N2DL-HeLa` | Cellpose `cyto2` | Published single-method comparator | Not run | Published values only |
+| `Fluo-N2DL-HeLa` | StarDist `2D_versatile_fluo` | Selected reproduction method | Complete for sequences 01 and 02 | Compare with the matching published StarDist row |
+| `Fluo-N2DL-HeLa` | Watershed + Cellpose + StarDist ensemble | Best published experiment for these sequences | Not run | Published values only |
+| `Fluo-C3DL-MDA231` | Trained 3D U-Net foreground and boundary maps | Published CTC submission method | Documented; GPU run not yet completed | A public-training run may be compared descriptively, but cannot reproduce the hidden-test score directly |
+| `Fluo-C3DL-MDA231` | Raw-image foreground and contour processing | Project 3D subset baseline | In progress for frames 000--002 | Qualitative and sparse-slice checks only; not the published benchmark |
+
+For HeLa, the paper converted every segmentation method's instance labels into
+a binary foreground map and a contour map. Its ensemble combined foreground
+maps with a logical OR and averaged the contour maps. This project selected
+StarDist first because the paper used publicly available pretrained weights
+without dataset-specific fine-tuning. Reproducing the other three HeLa rows
+would be separate experiments and would require recording their own inputs,
+parameters, runtimes, and result directories.
 
 ## General workflow
 
@@ -266,8 +294,181 @@ The executable records for these experiments are:
 - [`02_hela_stardist_seq01_benchmark.ipynb`](../../notebooks/ultrack/02_hela_stardist_seq01_benchmark.ipynb); and
 - [`02_hela_stardist_seq02_benchmark.ipynb`](../../notebooks/ultrack/02_hela_stardist_seq02_benchmark.ipynb).
 
+The reusable
+[`run_2d_benchmark.py`](../../scripts/ultrack/run_2d_benchmark.py) script
+extracts the common raw-image loading, label saving, label-to-contour
+conversion, Ultrack stages, CTC export, and run reporting from these notebooks.
+Its `--method` option supports StarDist, watershed, and Cellpose so the latter
+two methods can be run without duplicating the tracking workflow. Watershed
+and Cellpose results must remain marked as pending until their subset labels,
+complete outputs, and CTC evaluations have been inspected.
+
 Plots remain in the notebooks, but verbose solver outputs are cleared before
 committing because they can contain identifying license information.
+
+## Fluo-C3DL-MDA231: published U-Net and raw baseline
+
+### Reproduction target
+
+The ECCV paper reports the following result for the authors' CTC submission:
+
+| Evaluation split | SEG | TRA | CTB |
+| --- | ---: | ---: | ---: |
+| Hidden CTC test set | 0.549 | 0.818 | 0.683 |
+
+The project has the public CTC training sequences and annotations, not the
+hidden test annotations used for this table. Consequently, even a successful
+run with the authors' code and checkpoint is a method reproduction on a
+different evaluation split, not a direct numerical reproduction of the
+published hidden-test result.
+
+### Data
+
+| Item | Recorded value |
+| --- | --- |
+| Dataset | `Fluo-C3DL-MDA231` |
+| Selected sequence | `01` |
+| Raw frames | `t000.tif` through `t011.tif` |
+| Number of frames | 12 |
+| Raw volume shape | 30 x 512 x 512 voxels `(Z, Y, X)` |
+| Image type | `uint16` |
+| Sparse gold segmentation | Selected 2D z-slices named `man_seg_TTT_ZZZ.tif` |
+| Tracking ground truth | Complete 3D masks for the 12 public training frames |
+
+The sparse segmentation filenames contain both a time index and a z-slice
+index. For example, `man_seg_000_013.tif` annotates z-slice 13 of frame 000; it
+is not a complete 3D segmentation volume.
+
+### Published 3D U-Net methodology
+
+For MDA231, the authors trained a 3D U-Net to predict two voxelwise outputs:
+cell foreground and cell boundaries. The published submission code calls this
+network `EdgeUNet`. It uses 3D convolutions, feature widths of 32, 64, 128, and
+256, a kernel size of 5, linear interpolation in the decoder, and no residual
+connections or batch normalization.
+
+The paper's supplementary methodology reports:
+
+- 20 training epochs;
+- an initial learning rate of `1e-4`;
+- exponential learning-rate decay of `0.95` after each epoch; and
+- both public training sequences for learning the final submission weights.
+
+Retraining is not required for the first reproduction attempt because the
+authors published the pretrained `Fluo-C3DL-MDA231.ckpt` checkpoint. The
+project should use the authors' checkpoint before considering any locally
+trained alternative.
+
+The official sequence 01 script applies the following preprocessing and
+inference settings:
+
+| Stage | Parameter | Published submission value |
+| --- | --- | --- |
+| Normalization | Lower quantile | `0.0001` |
+| Normalization | Upper quantile | `0.9999` |
+| Resampling | Z interpolation factor | `5` |
+| U-Net inference | Tile shape | `(150, 512, 512)` |
+| U-Net inference | Tile overlap | `(0, 0, 0)` |
+| Boundary output | Gaussian sigma | `(0.5, 0.5, 0.5)` |
+| CTC export | Scale | `(0.2, 1, 1)` |
+| CTC export | Margin | `25` |
+| CTC export | Dilation iterations | `1` |
+
+The U-Net's foreground prediction is passed to Ultrack as the detection layer,
+and its smoothed boundary prediction is passed as the edge layer. Ultrack then
+performs segmentation-hypothesis generation, linking, optimization, and CTC
+export using the dataset-specific configuration in the authors' repository.
+
+The authoritative implementation is the
+[`submission-2023-10` branch of `royerlab/ultrack_CTC_submission`](https://github.com/royerlab/ultrack_CTC_submission/tree/submission-2023-10).
+The project notebook references that implementation instead of copying and
+maintaining a second version of the U-Net architecture.
+
+### Published-workflow resource requirements
+
+The authors document an NVIDIA GPU with at least 12 GB of memory for inference;
+their run was tested with a 24 GB GPU. Their Docker workflow also requires a
+Gurobi WLS license. Training a new U-Net may require at least 24 GB of GPU
+memory, but training is outside the first reproduction attempt because
+pretrained weights are available.
+
+The official workflow uses older pinned submission code and dependencies. It
+should therefore run in its own environment or container rather than being
+merged into the current Ultrack 0.8 CPU environment without validation. A run
+record must include:
+
+- the submission repository commit and branch;
+- the checkpoint path and file identity;
+- the environment or container identifier;
+- the GPU model and available memory from `nvidia-smi`;
+- the exact sequence script and any local changes;
+- the normalization, inference, Ultrack, and export runtimes; and
+- all deviations from the authors' configuration.
+
+The executable preparation and validation record is
+[`03_mda231_seq01_benchmark.ipynb`](../../notebooks/ultrack/03_mda231_seq01_benchmark.ipynb).
+It uses a private staging directory because the official script writes a
+`01_RES` directory below its configured data root. The shared CTC dataset must
+not be used as that writable output root.
+
+### Project raw-image subset methodology
+
+Before attempting the separate GPU workflow, the project uses frames 000--002
+to verify that Ultrack can process the 3D volume structure end to end. This
+baseline derives both inputs directly from the raw volumes:
+
+```python
+foreground = detect_foreground(
+    volume,
+    sigma=15.0,
+    remove_hist_mode=False,
+    min_foreground=0.0,
+)
+contours = robust_invert(volume, sigma=1.0)
+```
+
+The resulting arrays have shape `(T, Z, Y, X)`. Ultrack uses the same shared
+filesystem worker settings as the 2D runs: one database worker, four
+segmentation workers, one linking worker, and four Gurobi threads.
+
+This is an exploratory baseline, not a replacement for the U-Net. It differs
+from the paper in its image normalization, anisotropy handling, foreground
+estimator, boundary estimator, learned weights, and possibly the Ultrack
+configuration version.
+
+The baseline is inspected with:
+
+- middle z-slices and maximum-intensity projections of the raw volumes;
+- corresponding foreground and contour slices;
+- sparse gold and detected-foreground overlays on the same annotated z-slice;
+- per-object gold-pixel coverage and best-component IoU on annotated slices;
+- matched and missed gold-object counts at 50% coverage; and
+- result-label overlays after segmentation, linking, and solving.
+
+Detections on unannotated z-slices are not counted as false positives. Exact
+boundary overlays are treated as qualitative checks because a one-pixel shift
+can remove exact overlap even when two boundaries are visually close.
+
+The executable record is
+[`03_mda231_raw_to_tracks.ipynb`](../../notebooks/ultrack/03_mda231_raw_to_tracks.ipynb).
+Its output directory is named `mda231-seq01-t000-002-raw`, and any CTC-style
+subset export must be named `subset_RES` rather than `01_RES`.
+
+### Evaluation and reporting rules
+
+The appropriate evaluation depends on which methodology and frame range were
+run:
+
+| Experiment | Appropriate evaluation | Prohibited claim |
+| --- | --- | --- |
+| Three-frame raw baseline | Qualitative 3D review and sparse annotated-slice coverage/IoU | Do not report it as the published U-Net result or as a full CTC benchmark |
+| Complete public sequence with the authors' U-Net checkpoint | CTC SEG, TRA, and `OP_CTB` against public `01_GT`, plus qualitative review | Do not call the values a direct reproduction of hidden-test scores |
+| Authors' published hidden-test submission | Cite SEG 0.549, TRA 0.818, and CTB 0.683 | Do not imply that hidden labels are locally available |
+
+At the time of writing, the HeLa StarDist reproduction is complete, the raw
+MDA231 subset is an additional experiment, and the official MDA231 U-Net GPU
+workflow is documented but not yet completed. This status should be updated
+only after the corresponding outputs and run records have been checked.
 
 ## Adding another dataset
 
