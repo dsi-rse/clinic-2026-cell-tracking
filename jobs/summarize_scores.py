@@ -1,5 +1,4 @@
-"""Print per-sequence and mean scores, OP_CSB and OP_CTB, from ctc_evaluate CSV files.
-"""
+"""Print per-sequence and mean scores, OP_CSB and OP_CTB, from ctc_evaluate CSV files."""
 
 import sys
 from pathlib import Path
