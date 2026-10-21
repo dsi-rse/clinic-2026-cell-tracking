@@ -79,11 +79,12 @@ The target is the StarDist row for File 1 in Table 3 of the ECCV 2024 Ultrack
 paper. The published workflow applies a pretrained StarDist fluorescence model
 and converts its labels to foreground and contour maps before running Ultrack.
 
-| Metric | Published File 1 value | Reproduced value |
-| --- | ---: | ---: |
-| SEG | 0.724 | Pending evaluation |
-| TRA | 0.910 | Pending evaluation |
-| `OP_CTB` | 0.817 | Pending evaluation |
+| Metric | Published File 1 value | Reproduced value | Difference |
+| --- | ---: | ---: | ---: |
+| DET | Not reported | 0.897604 | Not applicable |
+| SEG | 0.724 | 0.701001 | -0.022999 |
+| TRA | 0.910 | 0.894289 | -0.015711 |
+| `OP_CTB` | 0.817 | 0.797645 | -0.019355 |
 
 These published values use the public CTC training sequence. The reproduction
 should be compared with this StarDist row, not with the stronger ensemble row.
@@ -207,21 +208,33 @@ under `01_RES`:
 The earlier five-frame check uses `subset_RES` instead. This name prevents a
 subset from being mistaken for a complete CTC sequence during evaluation.
 
-### Evaluation status
+### Evaluation results
 
-The full output has been generated, but its CTC metrics have not yet been added
-to this document. Evaluation will use
-[`evaluate_ctc_result.py`](../../scripts/ultrack/evaluate_ctc_result.py), which
-first verifies that the result masks cover the complete sequence and then
-reports DET, SEG, TRA, and `OP_CTB`.
+The complete `01_RES` output passed structural validation and was evaluated
+with the pinned `py-ctcmetrics` 1.3.3 environment. The evaluation produced:
 
-After evaluation:
+| Metric | Value |
+| --- | ---: |
+| Valid | 1 |
+| DET | 0.897604 |
+| SEG | 0.701001 |
+| TRA | 0.894289 |
+| `OP_CTB` | 0.797645 |
 
-1. add the reproduced values to the comparison table above;
-2. record the `py-ctcmetrics` version and worker count;
-3. preserve a sanitized CSV summary in the repository if useful; and
-4. discuss differences from the published values without assuming that close
-   scores prove an exact reproduction.
+Evaluation was much faster than the tracking workflow because it operated on
+the completed masks and lineage graph. It did not repeat StarDist inference,
+segmentation-hypothesis generation, linking, or optimization.
+
+The reproduced SEG, TRA, and `OP_CTB` values are respectively 0.022999,
+0.015711, and 0.019355 below the published StarDist values. This is a close
+reproduction, but the small differences should not be treated as random error
+without further evidence. Possible contributors include StarDist, TensorFlow,
+and Ultrack version differences; preprocessing details; model thresholds; and
+Ultrack defaults that were not fully specified in the publication.
+
+The full JSON and CSV reports remain with the run outputs on cluster storage.
+Only a sanitized metric summary should be committed because the raw reports
+record absolute cluster paths.
 
 The executable record for this experiment is
 [`02_hela_stardist_benchmark.ipynb`](../../notebooks/ultrack/02_hela_stardist_benchmark.ipynb).
