@@ -54,11 +54,21 @@ to the same Ultrack foreground/contour representation, runs the common Ultrack
 pipeline, and exports a CTC result. Supported methods are `stardist`,
 `watershed`, and `cellpose`.
 
-Install this project in the active environment before running the script:
+The headline StarDist results used the combined Ultrack-StarDist environment.
+Create it from the committed recipe, activate it, and install this project
+before running the StarDist workflow:
 
 ```bash
+micromamba create --file environments/ultrack-stardist.yaml
+micromamba activate cell-tracking-ultrack-stardist
 python -m pip install -e .
 ```
+
+This recipe pins the Ultrack, StarDist, and TensorFlow versions recorded in the
+completed HeLa runs. Set `KERAS_HOME` as described in
+[Ultrack reproducibility](../docs/ultrack/ultrack-reproducibility.md#shared-cluster-conventions)
+before the first run so the pretrained StarDist model is stored in the shared
+model cache.
 
 Always start with a five-frame labels-only check. For watershed:
 

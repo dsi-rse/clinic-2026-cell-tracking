@@ -27,6 +27,18 @@ def load_image_stack(image_paths: list[Path]) -> np.ndarray:
     return np.stack(images)
 
 
+def find_label_boundaries(labels: np.ndarray) -> np.ndarray:
+    """Find inner boundaries between 2D labels and the background."""
+    boundaries = np.zeros_like(labels, dtype=bool)
+
+    boundaries[1:, :] |= labels[1:, :] != labels[:-1, :]
+    boundaries[:-1, :] |= labels[:-1, :] != labels[1:, :]
+    boundaries[:, 1:] |= labels[:, 1:] != labels[:, :-1]
+    boundaries[:, :-1] |= labels[:, :-1] != labels[:, 1:]
+
+    return boundaries & (labels != 0)
+
+
 def segment_with_stardist(
     images: np.ndarray,
     model_name: str,
@@ -40,7 +52,8 @@ def segment_with_stardist(
     except ModuleNotFoundError as error:
         raise ModuleNotFoundError(
             "StarDist is required for --method stardist. Activate the "
-            "project's combined Ultrack-StarDist environment."
+            "cell-tracking-ultrack-stardist environment created from "
+            "environments/ultrack-stardist.yaml."
         ) from error
 
     model = StarDist2D.from_pretrained(model_name)

@@ -143,9 +143,14 @@ comparison limits.
 | GPU | Not used; TensorFlow reported no available CUDA device |
 
 The run used the `cell-tracking-ultrack-stardist` environment. The package
-versions above were printed by the executed notebook. An environment recipe for
-this combined Ultrack and StarDist environment still needs to be committed
-before the workflow can be considered fully reproducible from a fresh account.
+versions above were printed by the executed notebook. Recreate the combined
+Ultrack and StarDist environment from the committed recipe:
+
+```bash
+micromamba create --file environments/ultrack-stardist.yaml
+micromamba activate cell-tracking-ultrack-stardist
+python -m pip install -e .
+```
 
 ### StarDist inference
 

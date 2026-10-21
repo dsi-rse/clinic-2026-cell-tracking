@@ -4,6 +4,13 @@ This directory contains interactive analysis specific to Ultrack. General
 dataset inspection remains in `notebooks/verify_ctc_dataset_structure.ipynb`
 because it also applies to the other tracking methods in the project.
 
+Install the project in the active environment before running these notebooks
+so they can import shared helpers from `src/cell_tracking/`:
+
+```bash
+python -m pip install -e .
+```
+
 ## Workflow
 
 1. `01_hela_raw_to_tracks.ipynb`
