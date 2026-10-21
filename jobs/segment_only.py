@@ -10,10 +10,15 @@ from pathlib import Path
 
 import torch
 
-REPO = Path("/net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC")
+REPO = Path(
+    "/net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC"
+)
 sys.path.insert(0, str(REPO))
 from eval import EvalArgs  # noqa: E402
-from segmentation.inference.inference import inference_2d_ctc, inference_3d_ctc  # noqa: E402
+from segmentation.inference.inference import (  # noqa: E402
+    inference_2d_ctc,
+    inference_3d_ctc,
+)
 
 p = argparse.ArgumentParser()
 p.add_argument("--ds", required=True, help="dataset, e.g. Fluo-N2DH-GOWT1")
@@ -58,7 +63,12 @@ for subset in a.subsets:
     n_imgs = len(list(img_dir.glob("t*.tif")))
     if n_imgs == 0:
         sys.exit(f"No images found in {img_dir}")
-    res = REPO / "training_data" / a.ds / f"{subset}_RES_{model.stem}_{a.th_seed}_{a.th_cell}"
+    res = (
+        REPO
+        / "training_data"
+        / a.ds
+        / f"{subset}_RES_{model.stem}_{a.th_seed}_{a.th_cell}"
+    )
     res.mkdir(exist_ok=True)
     if len(list(res.glob("mask*.tif"))) == n_imgs:
         print(f"{subset}: already segmented ({n_imgs} masks), skipping", flush=True)
@@ -76,5 +86,13 @@ for subset in a.subsets:
         fuse_z_seeds=a.fuse_z_seeds,
     )
     print(f"Segmenting {a.ds} {subset} ({n_imgs} frames) -> {res}", flush=True)
-    infer(model=model, data_path=img_dir, result_path=res, device=device, batchsize=a.batch_size, args=args, num_gpus=1)
+    infer(
+        model=model,
+        data_path=img_dir,
+        result_path=res,
+        device=device,
+        batchsize=a.batch_size,
+        args=args,
+        num_gpus=1,
+    )
 print("Done", flush=True)
