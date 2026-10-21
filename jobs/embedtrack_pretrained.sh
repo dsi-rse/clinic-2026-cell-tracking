@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=et_gowt1_pretrained
+#SBATCH --job-name=et_pretrained
 #SBATCH --partition=general
 #SBATCH --qos=protected
 #SBATCH --gres=gpu:1
@@ -18,8 +18,8 @@ python -c "import torch; print('cuda:', torch.cuda.is_available(), torch.cuda.ge
 
 export PYTHONPATH=/home/slwhitney/clinic-2026-cell-tracking/external/EmbedTrack:${PYTHONPATH:-}
 cd /home/slwhitney
-jupyter nbconvert --to notebook --execute embedtrack_pretrained_eval_gowt1.ipynb \
-  --output embedtrack_pretrained_eval_gowt1_executed.ipynb \
+jupyter nbconvert --to notebook --execute /home/slwhitney/clinic-2026-cell-tracking/notebooks/embedtrack/embedtrack_pretrained_eval.ipynb --output-dir /home/slwhitney \
+  --output embedtrack_pretrained_eval_executed.ipynb \
   --ExecutePreprocessor.timeout=3000
 STATUS=$?
 echo "end: $(date)  nbconvert exit status: $STATUS"

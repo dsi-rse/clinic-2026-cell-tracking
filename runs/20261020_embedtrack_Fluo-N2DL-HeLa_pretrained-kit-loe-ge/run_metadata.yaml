@@ -9,7 +9,7 @@ model: pretrained KIT-Loe-GE (Cell Tracking Challenge submission)
 model_archive_sha256: 0abfa648355fca0380fa6e02aeced3275d0b32de26093ff54f23e9b559fdf89e
 model_file: KIT-Loe-GE/models/Fluo-N2DL-HeLa/best_iou_model.pth
 environment: environments/embedtrack.yaml, plus compatibility patches (diffs in ../20261020_embedtrack_Fluo-N2DH-GOWT1_pretrained-kit-loe-ge/)
-command: sbatch --exclude=k003 jobs/embedtrack_pretrained_hela.sh   # runs notebooks/embedtrack/embedtrack_pretrained_eval.ipynb (GOWT1 results reused), batch_size 32
+command: sbatch --exclude=k003 jobs/embedtrack_pretrained.sh   # runs notebooks/embedtrack/embedtrack_pretrained_eval.ipynb (GOWT1 results reused), batch_size 32
 seed: null                          # inference only
 cluster_job_id: 2216251
 hardware: 1x NVIDIA A100 80GB (node i001-ds), 8 CPUs, 32G requested
@@ -22,3 +22,4 @@ notes: >
   SEG is 0.022 below the published value and TRA matches within 0.002. Causes not investigated;
   possible factors are different movies, sparse SEG ground truth in the training sequences, and
   scorer or environment differences. Linux CTC scorer segfaults on the cluster, so the Mac build was used.
+# Note: this run used an earlier single-dataset copy of the notebook and job script; the code is the same, now merged into one.
