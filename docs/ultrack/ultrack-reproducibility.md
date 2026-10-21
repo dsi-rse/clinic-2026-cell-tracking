@@ -238,7 +238,7 @@ record absolute cluster paths.
 
 The executable record for this experiment is
 [`02_hela_stardist_benchmark.ipynb`](../../notebooks/ultrack/02_hela_stardist_benchmark.ipynb).
-Plots may remain in the notebook, but verbose solver output should be cleared
+Plots remain in the notebook, but verbose solver output are cleared
 before committing because it can contain identifying license information.
 
 ## Adding another dataset
