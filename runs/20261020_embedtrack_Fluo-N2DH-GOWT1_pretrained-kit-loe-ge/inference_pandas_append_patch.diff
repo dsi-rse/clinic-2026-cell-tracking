@@ -1,0 +1,12 @@
+11a12,22
+> 
+> # compatibility shim: DataFrame.append was removed in pandas 2.0
+> if not hasattr(pd.DataFrame, "append"):
+>     def _df_append(self, other, ignore_index=False, **kwargs):
+>         if isinstance(other, dict):
+>             other = pd.DataFrame([other])
+>         elif isinstance(other, pd.Series):
+>             other = other.to_frame().T
+>         return pd.concat([self, other], ignore_index=ignore_index)
+>     pd.DataFrame.append = _df_append
+> 
