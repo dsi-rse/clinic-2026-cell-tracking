@@ -1,5 +1,27 @@
 # Ultrack benchmark reproducibility
 
+- [Ultrack benchmark reproducibility](#ultrack-benchmark-reproducibility)
+  - [Purpose](#purpose)
+  - [Methodology and status overview](#methodology-and-status-overview)
+  - [General workflow](#general-workflow)
+  - [Shared cluster conventions](#shared-cluster-conventions)
+  - [Fluo-N2DL-HeLa: StarDist input](#fluo-n2dl-hela-stardist-input)
+    - [Reproduction target](#reproduction-target)
+    - [Data and software](#data-and-software)
+    - [StarDist inference](#stardist-inference)
+    - [Ultrack configuration](#ultrack-configuration)
+    - [Full-sequence run records](#full-sequence-run-records)
+    - [Output layout](#output-layout)
+    - [Evaluation results](#evaluation-results)
+  - [Fluo-C3DL-MDA231: published U-Net and raw baseline](#fluo-c3dl-mda231-published-u-net-and-raw-baseline)
+    - [Reproduction target](#reproduction-target-1)
+    - [Data](#data)
+    - [Published 3D U-Net methodology](#published-3d-u-net-methodology)
+    - [Published-workflow resource requirements](#published-workflow-resource-requirements)
+    - [Project raw-image subset methodology](#project-raw-image-subset-methodology)
+    - [Evaluation and reporting rules](#evaluation-and-reporting-rules)
+  - [Adding another dataset](#adding-another-dataset)
+
 ## Purpose
 
 This document records how the project runs and evaluates Ultrack benchmarks.
@@ -129,22 +151,44 @@ comparison limits.
 
 | Item | Recorded value |
 | --- | --- |
+| Tracking method | Ultrack 0.8.0 |
+| Paper | [Large-Scale Multi-Hypotheses Cell Tracking Using Ultrametric Contours Maps](https://doi.org/10.1007/978-3-031-72986-7_3) |
+| Repository | [`royerlab/ultrack`](https://github.com/royerlab/ultrack) |
+| Segmentation input | StarDist 0.9.2 with pretrained `2D_versatile_fluo` model |
 | Dataset | `Fluo-N2DL-HeLa` |
+| Dataset source | [Cell Tracking Challenge public training archive](https://celltrackingchallenge.net/2d-datasets/) |
+| Archive | [`Fluo-N2DL-HeLa.zip`](https://data.celltrackingchallenge.net/training-datasets/Fluo-N2DL-HeLa.zip) |
+| Reference archive version | Last modified 2024-01-16; ETag `be1a7cf-60f0f5ba91e40`; 199,337,935 bytes |
+| Reference archive SHA-256 | `35dd99d58e071aba0b03880128d920bd1c063783cc280f9531fbdc5be614c82e` (checked 2026-10-21) |
+| Input-data provenance | The checksum above identifies the official archive available on 2026-10-21. The runs used an already-extracted shared cluster copy, which was not independently checksummed before the experiments. |
 | Sequences | `01` and `02` |
 | Frames per sequence | `t000.tif` through `t091.tif` |
 | Number of frames per sequence | 92 |
 | Image shape | 700 x 1100 pixels |
 | Image type | `uint16` |
+| Crop or conversion | None; the raw TIFF sequences were read at their original size and type |
 | Python | 3.12.15 |
 | TensorFlow | 2.21.0 |
 | StarDist | 0.9.2 |
 | Ultrack | 0.8.0 |
-| Solver | Gurobi |
+| Solver | Gurobi, `gurobipy` 13.0.3 |
+| Project repository commit | The notebooks were run from an uncommitted working copy. They were first committed in `70c2dae` (2026-10-20 22:52 CDT), with lint-only changes in `4229d0f`. The evaluation script was committed in `cfea879`. |
 | GPU | Not used; TensorFlow reported no available CUDA device |
 
-The run used the `cell-tracking-ultrack-stardist` environment. The package
-versions above were printed by the executed notebook. Recreate the combined
-Ultrack and StarDist environment from the committed recipe:
+The tracking notebooks were executed using the Jupyter kernel associated with
+the `cell-tracking-ultrack-stardist` environment. The package versions above
+were printed by the executed notebook. The project environments relevant to
+the Ultrack experiments are:
+
+| Environment | Purpose | Committed recipe |
+| --- | --- | --- |
+| `cell-tracking-ultrack` | Ultrack without an optional segmentation model | [`environments/ultrack.yaml`](../../environments/ultrack.yaml) |
+| `cell-tracking-ultrack-stardist` | Completed StarDist-to-Ultrack tracking notebooks | [`environments/ultrack-stardist.yaml`](../../environments/ultrack-stardist.yaml) |
+| `cell-tracking-ctc-evaluation` | CTC validation and metric calculation | [`environments/ctc-evaluation.yaml`](../../environments/ctc-evaluation.yaml) |
+
+The absolute micromamba installation paths are user-specific and are therefore
+not part of the reproducibility record. Recreate the combined Ultrack and
+StarDist environment from the committed recipe:
 
 ```bash
 micromamba create --file environments/ultrack-stardist.yaml
@@ -196,6 +240,24 @@ config.tracking_config.n_threads = 4
 config.tracking_config.solver_name = "GUROBI"
 ```
 
+The resolved configuration printed by the notebook, which includes all Ultrack
+0.8.0 defaults, was:
+
+```text
+SegmentationConfig(min_area=100, min_area_factor=4.0, max_area=1000000, n_workers=4,
+    min_frontier=0.0, threshold=0.5, max_noise=0.0, random_seed='frame',
+    ws_hierarchy=watershed_hierarchy_by_area, anisotropy_penalization=0.0)
+LinkingConfig(max_distance=15.0, n_workers=1, max_neighbors=5, distance_weight=0.0,
+    z_score_threshold=5.0)
+TrackingConfig(solver_name='GUROBI', appear_weight=-0.001, disappear_weight=-0.001,
+    division_weight=-0.001, image_border_size=None, n_threads=4, window_size=None,
+    overlap_size=1, solution_gap=0.001, time_limit=36000, method=0,
+    link_function='power', power=4, bias=-0.0)
+```
+
+Defaults can change between Ultrack versions, so this record is more reliable
+than stating that defaults were used.
+
 The notebook keeps segmentation, linking, and solving in separate cells. This
 makes it possible to diagnose a failed stage without rerunning StarDist
 inference or all preceding Ultrack stages.
@@ -213,6 +275,26 @@ inference or all preceding Ultrack stages.
 The long segmentation and linking times are expected for the complete sequence.
 Progress can remain unchanged while a worker is processing a frame, so a
 stationary progress bar alone does not show that the process is deadlocked.
+
+Apart from the SQLite locking error that was avoided by using one linking
+worker, the only warnings were TensorFlow/absl start-up messages (for example,
+"All log messages before absl::InitializeLog() is called are written to
+STDERR") and the message that no CUDA device was available. Neither affected
+the results.
+
+The remaining execution metadata are:
+
+| Item | Recorded value |
+| --- | --- |
+| Execution interface | Jupyter notebooks in an interactive Slurm allocation on the DSI cluster |
+| Slurm job ID | `2216344` for both sequences |
+| Slurm state and window | `COMPLETED`; 2026-10-20 20:38:36--22:59:06 CDT |
+| Slurm resources | `general` partition; node `j002-ds`; 4 allocated CPUs; 16 GB requested memory |
+| Hardware | CPU-only; CPU model was not recorded |
+| Sequence 01 export timestamp | 2026-10-20 21:21:11 CDT |
+| Sequence 02 export timestamp | 2026-10-20 22:50:33 CDT |
+| Peak memory | Slurm `MaxRSS` was 11,122,900 KiB (about 10.6 GiB) for the `extern` step and 1,425,296 KiB for the `bash` step. The notebook kernel was started through a VS Code SSH connection to the compute node, which places it in the `extern` step, so 10.6 GiB is the best estimate of the notebook's peak memory. Both sequences ran in the same job, so this is the peak across both runs, not per sequence. It is about two-thirds of the 16 GB requested. |
+| Random seed | No explicit seed was set; Ultrack 0.8.0 reported its default segmentation seed as `frame` |
 
 Both completed exports contained 92 CTC masks, `mask000.tif` through
 `mask091.tif`, and a `res_track.txt` lineage file. Their track-table and lineage
@@ -260,6 +342,14 @@ under the sequence-specific result name:
 The earlier five-frame check uses `subset_RES` instead. This name prevents a
 subset from being mistaken for a complete CTC sequence during evaluation.
 
+These directory names do not follow the
+`runs/<date>_<method>_<dataset>_<short-description>/` convention in
+[`docs/reproducibility.md`](../reproducibility.md). They were created before
+that convention was applied. No `metadata.yaml` was written for these runs;
+this document is their run record. The `run_report.json` written by
+`run_2d_benchmark.py` does not exist for these runs because they were executed
+from the notebooks, not the script.
+
 ### Evaluation results
 
 The complete `01_RES` and `02_RES` outputs passed structural validation and
@@ -290,9 +380,61 @@ contributors include StarDist, TensorFlow, and Ultrack version differences;
 preprocessing details; model thresholds; and Ultrack defaults that were not
 fully specified in the publication.
 
+The known software differences are:
+
+| Component | Authors' published setup | This reproduction |
+| --- | --- | --- |
+| Ultrack | Not reported for the HeLa experiments. The authors' 3D CTC submission repository builds on the `royerlab/ultrack:0.6.1-cuda11.8` image. | 0.8.0 |
+| `gurobipy` | Not reported for the HeLa experiments. The 3D CTC submission pins 11.0.3. | 13.0.3 |
+| StarDist | Not reported | 0.9.2 |
+| TensorFlow | Not reported | 2.21.0 |
+
+We did not find the software versions used for the HeLa experiments in the
+paper or in the authors' public
+[`ultrack_CTC_submission`](https://github.com/royerlab/ultrack_CTC_submission/tree/submission-2023-10)
+repository, which contains only the 3D dataset workflows. The 3D submission
+versions are listed for context only; they do not show which versions produced
+the HeLa table values.
+
 The full JSON and CSV reports remain with the run outputs on cluster storage.
 Only a sanitized metric summary should be committed because the raw reports
 record absolute cluster paths.
+
+The same evaluation script was used for both sequences. The sequence-specific
+ground-truth directory, result directory, and published reference values were
+changed as shown below. The documented environment variables keep private
+cluster paths out of the repository.
+
+Sequence 01:
+
+```bash
+python scripts/ultrack/evaluate_ctc_result.py \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01_GT" \
+    --result-dir "$ULTRACK_RUN_ROOT/hela-seq01-full-stardist/01_RES" \
+    --dataset Fluo-N2DL-HeLa \
+    --method ultrack-stardist-2D_versatile_fluo \
+    --published-seg 0.724 \
+    --published-tra 0.910 \
+    --published-ctb 0.817 \
+    --num-workers 4
+```
+
+Sequence 02:
+
+```bash
+python scripts/ultrack/evaluate_ctc_result.py \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/02_GT" \
+    --result-dir "$ULTRACK_RUN_ROOT/hela-seq02-full-stardist/02_RES" \
+    --dataset Fluo-N2DL-HeLa \
+    --method ultrack-stardist-2D_versatile_fluo \
+    --published-seg 0.818 \
+    --published-tra 0.941 \
+    --published-ctb 0.880 \
+    --num-workers 4
+```
+
+These commands were run from the repository root using the
+`cell-tracking-ctc-evaluation` environment.
 
 The executable records for these experiments are:
 
