@@ -1,0 +1,10 @@
+name: cell-tracking-ctc-evaluation
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - py-ctcmetrics==1.3.3
