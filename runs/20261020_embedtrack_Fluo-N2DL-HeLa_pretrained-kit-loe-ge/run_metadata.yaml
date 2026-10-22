@@ -4,7 +4,7 @@ method_commit: 510bc748230056e50fb8078281d76533f41a1d64
 paper: Loeffler and Mikut, EmbedTrack (IEEE Access 2022; IEEE 9834915; arXiv 2204.10713)
 dataset: Fluo-N2DL-HeLa
 sequences: ["01", "02"]            # CTC training sequences (GT public)
-dataset_archive_sha256: not recorded (dataset was already unzipped in the shared ctc folder)
+dataset_archive_sha256: 35dd99d58e071aba0b03880128d920bd1c063783cc280f9531fbdc5be614c82e   # Fluo-N2DL-HeLa.zip (199337935 bytes) downloaded 2026-10-20 from https://data.celltrackingchallenge.net/training-datasets/Fluo-N2DL-HeLa.zip; the shared-drive copy was already unzipped (sequence 01 has 92 frames, same as the archive)
 model: pretrained KIT-Loe-GE (Cell Tracking Challenge submission)
 model_archive_sha256: 0abfa648355fca0380fa6e02aeced3275d0b32de26093ff54f23e9b559fdf89e
 model_file: KIT-Loe-GE/models/Fluo-N2DL-HeLa/best_iou_model.pth
