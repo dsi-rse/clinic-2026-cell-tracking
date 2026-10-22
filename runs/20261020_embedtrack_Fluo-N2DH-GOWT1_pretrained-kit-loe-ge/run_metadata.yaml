@@ -1,0 +1,25 @@
+method: embedtrack
+method_repo: https://github.com/kaloeffler/EmbedTrack
+method_commit: 510bc748230056e50fb8078281d76533f41a1d64
+paper: Loeffler and Mikut, EmbedTrack (IEEE Access 2022; IEEE 9834915; arXiv 2204.10713)
+dataset: Fluo-N2DH-GOWT1
+sequences: ["01", "02"]            # CTC training sequences (GT public)
+dataset_archive_sha256: 1a7bd9a7d1d10c4122c7782427b437246fb69cc3322a975485c04e206f64fc2c
+model: pretrained KIT-Loe-GE (Cell Tracking Challenge submission)
+model_archive_sha256: 0abfa648355fca0380fa6e02aeced3275d0b32de26093ff54f23e9b559fdf89e
+model_file: KIT-Loe-GE/models/Fluo-N2DH-GOWT1/best_iou_model.pth
+environment: environments/embedtrack.yaml, plus compatibility patches (see the .diff files here)
+command: sbatch --exclude=k003 jobs/embedtrack_pretrained.sh   # runs notebooks/embedtrack/embedtrack_pretrained_eval.ipynb, batch_size 32
+seed: null                          # inference only
+cluster_job_id: 2211069             # earlier attempt 2208139 failed (pandas DataFrame.append)
+hardware: 1x NVIDIA A100 80GB (node i001-ds), 8 CPUs, 32G requested
+runtime: "00:05:02"
+peak_memory: 2.5 GB (MaxRSS 2648752K)
+raw_output_location: /home/slwhitney/clinic-2026-cell-tracking/external/EmbedTrack/results/Fluo-N2DH-GOWT1/KIT-Loe-GE/train/{01_RES,02_RES}   # not in git; to be moved to the shared project directory
+evaluation_command: CTC EvaluationSoftware (Mac build) {SEG,TRA,DET}Measure <dir containing NN_GT and NN_RES> <seq> 3
+notes: >
+  Scored on training sequences 01/02, not the hidden challenge sequences used in the paper; the pretrained
+  model saw ~90% of those frames, so slightly higher scores are expected. The Linux CTC scorer segfaults
+  on the cluster, so scoring was done with the Mac build. EmbedTrack needed pandas/numpy/tifffile
+  compatibility patches (diffs in this folder).
+# Note: this run used an earlier single-dataset copy of the notebook and job script; the code is the same, now merged into one.
