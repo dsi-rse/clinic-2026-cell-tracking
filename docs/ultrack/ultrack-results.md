@@ -133,5 +133,125 @@ evaluation:
 4. Preserve these outputs as the untuned baseline. If watershed is tuned, use
    sequence 01 for development and retain sequence 02 as a less-biased
    comparison rather than repeatedly optimizing both against their scores.
-5. Complete the planned Cellpose and ensemble experiments before deciding
-   whether a larger watershed parameter study is worth the compute time.
+5. Complete the planned ensemble experiment before deciding whether a larger
+   watershed parameter study is worth the compute time.
+
+## Fluo-N2DL-HeLa Cellpose
+
+### Experiment status
+
+Both public training sequences were processed with Cellpose labels followed by
+Ultrack hypothesis generation, linking, solving, and CTC export. Both CTC
+result directories passed `py-ctcmetrics` validation and were evaluated on
+2026-10-26.
+
+The project workflow uses the pretrained Cellpose `cyto2` model from the
+published experiment. The evaluation reports and both `run_report.json` files
+were inspected to verify the inference parameters, software versions,
+runtimes, and output counts below.
+
+### Configuration
+
+| Item | Recorded value |
+| --- | --- |
+| Dataset | `Fluo-N2DL-HeLa` |
+| Sequences | `01` and `02` |
+| Frames per sequence | 92 |
+| Cellpose model | Pretrained `cyto2` |
+| Cellpose | 3.1.1.3 |
+| PyTorch | 2.14.1 |
+| NumPy | 2.0.2 |
+| Ultrack | 0.8.0 |
+| Channels | `[0, 0]` |
+| Diameter | Automatic (`None`) |
+| Flow threshold | 0.4 |
+| Cell-probability threshold | 0.0 |
+| GPU | NVIDIA A40; GPU execution requested and used |
+| Label-to-contour sigma | 4 pixels |
+| Evaluation | `py-ctcmetrics` through `scripts/ultrack/evaluate_ctc_result.py` |
+
+### Evaluation results
+
+| Sequence | Metric | Published | Reproduced | Difference |
+| --- | --- | ---: | ---: | ---: |
+| 01 | DET | Not reported | 0.936625 | Not applicable |
+| 01 | SEG | 0.671 | 0.779104 | +0.108104 |
+| 01 | TRA | 0.863 | 0.933606 | +0.070606 |
+| 01 | `OP_CTB` | 0.767 | 0.856355 | +0.089355 |
+| 02 | DET | Not reported | 0.967124 | Not applicable |
+| 02 | SEG | 0.743 | 0.838270 | +0.095270 |
+| 02 | TRA | 0.908 | 0.964671 | +0.056671 |
+| 02 | `OP_CTB` | 0.825 | 0.901470 | +0.076470 |
+
+The matching published rows are the Cellpose results from Table 3 of the
+[ECCV 2024 Ultrack paper](https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/10114.pdf).
+The reproduced result exceeds the reported Cellpose SEG, TRA, and CTB values
+for both sequences. This is encouraging, but the published environment and
+hardware are not specified in enough detail to attribute the improvement to a
+particular dependency or configuration change. Qualitative overlays must also
+be inspected before drawing a final conclusion.
+
+The reports are stored outside Git at:
+
+```text
+<ULTRACK_RUN_ROOT>/hela-seq01-full-cellpose/evaluation/01_RES/
+<ULTRACK_RUN_ROOT>/hela-seq02-full-cellpose/evaluation/02_RES/
+```
+
+Selected tracking-error diagnostics are:
+
+| Sequence | False negatives | False positives | Edges deleted | Edges added | Edges changed |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 01 | 460 | 775 | 6 | 693 | 68 |
+| 02 | 392 | 3,857 | 27 | 1,147 | 210 |
+
+As with the watershed results, raw error counts should not be compared directly
+between sequences because their cell densities and lineage sizes differ.
+
+### Runtime and output summary
+
+| Item | Sequence 01 | Sequence 02 |
+| --- | ---: | ---: |
+| Total recorded pipeline runtime | 407.9 seconds | 646.7 seconds |
+| Cellpose inference | 110.1 seconds | 168.4 seconds |
+| Label-to-contour conversion | 5.1 seconds | 5.9 seconds |
+| Ultrack hypothesis generation | 223.5 seconds | 363.3 seconds |
+| Ultrack linking | 57.9 seconds | 80.7 seconds |
+| Ultrack solving | 11.2 seconds | 28.4 seconds |
+| Mean Cellpose labels per frame | 96.8 | 315.4 |
+| Mean selected Ultrack objects per frame | 97.1 | 312.7 |
+| Unique predicted tracks | 304 | 968 |
+| Lineage entries | 46 | 282 |
+| Ground-truth lineage records | 265 | 674 |
+
+The complete workflows took approximately 6.8 minutes for sequence 01 and
+10.8 minutes for sequence 02 using an NVIDIA A40. These runtimes describe this
+specific environment and hardware allocation and should not be treated as
+hardware-independent performance measurements.
+
+### Comparison with completed project runs
+
+| Sequence | Segmentation input | SEG | TRA | `OP_CTB` |
+| --- | --- | ---: | ---: | ---: |
+| 01 | Watershed | 0.463852 | 0.670664 | 0.567258 |
+| 01 | StarDist | 0.701001 | 0.894289 | 0.797645 |
+| 01 | Cellpose | **0.779104** | **0.933606** | **0.856355** |
+| 02 | Watershed | 0.582872 | 0.762708 | 0.672790 |
+| 02 | StarDist | 0.816860 | 0.919480 | 0.868170 |
+| 02 | Cellpose | **0.838270** | **0.964671** | **0.901470** |
+
+Cellpose is the strongest completed project input on both sequences. Relative
+to the watershed baseline, its CTB is higher by 0.289097 on sequence 01 and
+0.228680 on sequence 02. The reduction in false negatives and missing temporal
+edges is consistent with the large improvements in DET and TRA. Sequence 02
+still has many false-positive operations, so qualitative review remains
+important even though its aggregate scores are high.
+
+### Follow-up
+
+1. Inspect raw, Cellpose, and final Ultrack overlays for representative frames,
+   including examples of apparent false positives and track fragmentation.
+2. Extend future run reports to capture the selected CUDA device automatically
+   rather than recording only that GPU use was requested.
+3. Use the saved Cellpose labels as one of the three inputs to the planned
+   watershed, Cellpose, and StarDist ensemble.

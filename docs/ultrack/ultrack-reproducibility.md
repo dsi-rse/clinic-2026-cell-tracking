@@ -49,7 +49,7 @@ actually run by this project are marked as reproduced or in progress.
 | Dataset | Segmentation input | Role | Project status | Valid comparison |
 | --- | --- | --- | --- | --- |
 | `Fluo-N2DL-HeLa` | Watershed | Published single-method comparator | Complete and evaluated for sequences 01 and 02 | Compare with the matching published watershed row, while documenting the incomplete parameter specification |
-| `Fluo-N2DL-HeLa` | Cellpose `cyto2` | Published single-method comparator | Not run | Published values only |
+| `Fluo-N2DL-HeLa` | Cellpose `cyto2` | Published single-method comparator | Complete and evaluated for sequences 01 and 02 | Compare with the matching published Cellpose row while documenting software and hardware differences |
 | `Fluo-N2DL-HeLa` | StarDist `2D_versatile_fluo` | Selected reproduction method | Complete for sequences 01 and 02 | Compare with the matching published StarDist row |
 | `Fluo-N2DL-HeLa` | Watershed + Cellpose + StarDist ensemble | Best published experiment for these sequences | Not run | Published values only |
 | `Fluo-C3DL-MDA231` | Trained 3D U-Net foreground and boundary maps | Published CTC submission method | Documented; GPU run not yet completed | A public-training run may be compared descriptively, but cannot reproduce the hidden-test score directly |
@@ -59,9 +59,9 @@ For HeLa, the paper converted every segmentation method's instance labels into
 a binary foreground map and a contour map. Its ensemble combined foreground
 maps with a logical OR and averaged the contour maps. This project selected
 StarDist first because the paper used publicly available pretrained weights
-without dataset-specific fine-tuning. Reproducing the other three HeLa rows
-would be separate experiments and would require recording their own inputs,
-parameters, runtimes, and result directories.
+without dataset-specific fine-tuning. Watershed and Cellpose have since been
+completed as separate experiments. The remaining ensemble experiment requires
+its own inputs, parameters, runtimes, and result directories.
 
 ## Results
 
@@ -454,10 +454,10 @@ The reusable
 [`run_2d_benchmark.py`](../../scripts/ultrack/run_2d_benchmark.py) script
 extracts the common raw-image loading, label saving, label-to-contour
 conversion, Ultrack stages, CTC export, and run reporting from these notebooks.
-Its `--method` option supports StarDist, watershed, and Cellpose so the latter
-two methods can be run without duplicating the tracking workflow. Watershed
-and Cellpose results must remain marked as pending until their subset labels,
-complete outputs, and CTC evaluations have been inspected.
+Its `--method` option supports StarDist, watershed, and Cellpose without
+duplicating the tracking workflow. All three single-method workflows are now
+complete and evaluated for both HeLa sequences. Their numerical results and
+interpretation are recorded in [`ultrack-results.md`](ultrack-results.md).
 
 Cellpose uses the separate `cell-tracking-ultrack-cellpose` environment, which
 pins NumPy 2.0.2 for compatibility with Cellpose 3. The project source is made
@@ -626,10 +626,11 @@ run:
 | Complete public sequence with the authors' U-Net checkpoint | CTC SEG, TRA, and `OP_CTB` against public `01_GT`, plus qualitative review | Do not call the values a direct reproduction of hidden-test scores |
 | Authors' published hidden-test submission | Cite SEG 0.549, TRA 0.818, and CTB 0.683 | Do not imply that hidden labels are locally available |
 
-At the time of writing, the HeLa StarDist reproduction is complete, the raw
-MDA231 subset is an additional experiment, and the official MDA231 U-Net GPU
-workflow is documented but not yet completed. This status should be updated
-only after the corresponding outputs and run records have been checked.
+At the time of writing, the HeLa watershed, Cellpose, and StarDist experiments
+are complete and evaluated. The raw MDA231 subset is an additional experiment,
+and the official MDA231 U-Net GPU workflow is documented but not yet completed.
+This status should be updated only after the corresponding outputs and run
+records have been checked.
 
 ## Adding another dataset
 
