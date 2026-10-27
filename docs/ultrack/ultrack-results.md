@@ -342,3 +342,105 @@ The sequence 01 and sequence 02 workflows took approximately 31.4 and 30.1
 minutes, respectively. The A100 record is important context, but most of each
 runtime was spent in Ultrack's CPU-based hypothesis-generation and linking
 stages rather than Cellpose inference.
+
+## Fluo-N2DH-GOWT1 watershed baseline
+
+### Experiment status
+
+Both public training sequences were processed from raw images through
+watershed segmentation, Ultrack hypothesis generation, linking, solving, and
+CTC export. Both CTC result directories passed `py-ctcmetrics` validation and
+were evaluated on 2026-10-27.
+
+As with the GOWT1 Cellpose experiment, there is no matching published Ultrack
+benchmark for this dataset. These values are project baseline results.
+
+### Configuration
+
+| Item | Recorded value |
+| --- | --- |
+| Dataset | `Fluo-N2DH-GOWT1` |
+| Sequences | `01` and `02` |
+| Frames per sequence | 92 |
+| Watershed foreground | Otsu threshold calculated separately for each frame |
+| Gaussian smoothing sigma | 1 pixel |
+| h-minima value | 2 |
+| Minimum input-object size | 20 pixels |
+| Label-to-contour sigma | 4 pixels |
+| NumPy | 2.5.4 |
+| scikit-image | 0.26.0 |
+| SciPy | 1.18.1 |
+| Ultrack | 0.8.0 |
+
+The 20-pixel input filter is distinct from Ultrack's hierarchy-level
+`segmentation_config.min_area` setting.
+
+### Evaluation results
+
+| Sequence | DET | SEG | TRA | `OP_CTB` |
+| --- | ---: | ---: | ---: | ---: |
+| 01 | 0.097911 | 0.075761 | 0.112959 | 0.094360 |
+| 02 | 0.076003 | 0.163528 | 0.093791 | 0.128659 |
+
+The reports are stored outside Git at:
+
+```text
+<ULTRACK_RUN_ROOT>/gowt1-seq01-full-watershed/evaluation/01_RES/
+<ULTRACK_RUN_ROOT>/gowt1-seq02-full-watershed/evaluation/02_RES/
+```
+
+Selected tracking-error diagnostics are:
+
+| Sequence | Node splits | False negatives | False positives | Edges deleted | Edges added | Edges changed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 01 | 0 | 1,538 | 3,185 | 0 | 1,598 | 1 |
+| 02 | 0 | 1,916 | 4,097 | 0 | 1,941 | 1 |
+
+### Runtime and output summary
+
+| Item | Sequence 01 | Sequence 02 |
+| --- | ---: | ---: |
+| Total recorded pipeline runtime | 394.7 seconds | 586.5 seconds |
+| Watershed segmentation | 44.5 seconds | 43.9 seconds |
+| Label-to-contour conversion | 10.2 seconds | 10.2 seconds |
+| Ultrack hypothesis generation | 220.9 seconds | 315.0 seconds |
+| Ultrack linking | 108.1 seconds | 198.9 seconds |
+| Ultrack solving | 11.0 seconds | 18.5 seconds |
+| Mean watershed labels per frame | 54.8 | 76.4 |
+| Mean selected Ultrack objects per frame | 40.3 | 51.1 |
+| Unique predicted tracks | 514 | 689 |
+| Lineage entries | 274 | 344 |
+| Ground-truth lineage records | 28 | 58 |
+
+The sequence 01 and sequence 02 workflows took approximately 6.6 and 9.8
+minutes, respectively.
+
+### Comparison with Cellpose
+
+| Sequence | Method | DET | SEG | TRA | `OP_CTB` |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 01 | Watershed | 0.097911 | 0.075761 | 0.112959 | 0.094360 |
+| 01 | Cellpose | **0.956608** | **0.850406** | **0.956903** | **0.903654** |
+| 02 | Watershed | 0.076003 | 0.163528 | 0.093791 | 0.128659 |
+| 02 | Cellpose | **0.849424** | **0.853874** | **0.849609** | **0.851741** |
+
+Cellpose improves CTB by 0.809294 on sequence 01 and 0.723082 on sequence 02.
+The watershed input contains approximately 2.4 times as many labels per frame
+as Cellpose for sequence 01 and 3.0 times as many for sequence 02. It also
+produces 514 and 689 predicted track identities, compared with 28 and 58
+ground-truth lineage records. Together with the false-positive and missing-edge
+counts, this is strong evidence of extensive oversegmentation and track
+fragmentation.
+
+### Follow-up hypotheses
+
+1. Inspect raw images, watershed labels, and final Ultrack labels to confirm
+   that the additional regions are small fragments rather than valid
+   unannotated cells.
+2. Measure the area distribution of representative GOWT1 nuclei before
+   increasing either the watershed `minimum_object_size` or Ultrack's
+   `segmentation_config.min_area`; these parameters affect different stages.
+3. If tuning is pursued, use sequence 01 for parameter selection and preserve
+   sequence 02 as a less-biased evaluation sequence.
+4. Keep the current outputs as the documented untuned baseline rather than
+   overwriting them.
