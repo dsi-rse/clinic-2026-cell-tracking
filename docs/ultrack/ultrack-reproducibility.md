@@ -459,6 +459,11 @@ two methods can be run without duplicating the tracking workflow. Watershed
 and Cellpose results must remain marked as pending until their subset labels,
 complete outputs, and CTC evaluations have been inspected.
 
+Cellpose uses the separate `cell-tracking-ultrack-cellpose` environment, which
+pins NumPy 2.0.2 for compatibility with Cellpose 3. The project source is made
+available with `export PYTHONPATH="$PWD/src"` rather than an editable install,
+because the main project currently requires NumPy 2.2 or newer.
+
 Plots remain in the notebooks, but verbose solver outputs are cleared before
 committing because they can contain identifying license information.
 

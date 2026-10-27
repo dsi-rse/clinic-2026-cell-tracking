@@ -93,12 +93,16 @@ Cellpose 4 uses a different model family. Create its separate environment:
 ```bash
 micromamba create --file environments/ultrack-cellpose.yaml
 micromamba activate cell-tracking-ultrack-cellpose
-python -m pip install -e .
+export PYTHONPATH="$PWD/src"
 ```
 
-The recipe provides the reproducible `cyto2` software version but does not
-guarantee a CUDA-enabled PyTorch build. Use `--cellpose-gpu` only after checking
-that `torch.cuda.is_available()` returns `True`; otherwise leave the flag out.
+The environment pins NumPy 2.0.2 because Cellpose 3 requires NumPy below 2.1.
+Do not run `python -m pip install -e .` in this environment: the main project
+currently requires NumPy 2.2 or newer. `PYTHONPATH` makes the project source
+available without changing the Cellpose-compatible NumPy version. The recipe
+provides the reproducible `cyto2` software version but does not guarantee a
+CUDA-enabled PyTorch build. Use `--cellpose-gpu` only after checking that
+`torch.cuda.is_available()` returns `True`; otherwise leave the flag out.
 
 Set the shared model cache before the first Cellpose import, then run the same
 five-frame check:
