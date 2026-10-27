@@ -126,3 +126,35 @@ sequence after inspecting the subset. A complete run exports `01_RES` or
 `02_RES`; a partial run exports `subset_RES` so it cannot be confused with a
 benchmark result. Every run also writes `run_report.json` with package
 versions, parameters, runtimes, and output counts.
+
+## Reusable 2D Ultrack ensemble
+
+[`ultrack/run_2d_ensemble.py`](ultrack/run_2d_ensemble.py) reuses the saved
+`input_labels` from complete watershed, Cellpose, and StarDist runs. Following
+the published Ultrack experiment, it combines the three binary foreground maps
+with logical OR and averages the three contour maps. It then runs the common
+Ultrack stages and exports a CTC result. The segmentation models are not run
+again.
+
+Run the ensemble in the base `cell-tracking-ultrack` environment. The script
+defaults to one segmentation worker to limit peak memory on the larger GOWT1
+images:
+
+```bash
+python scripts/ultrack/run_2d_ensemble.py \
+    --input-dir <CTC_ROOT>/ctc/Fluo-N2DH-GOWT1/01 \
+    --watershed-label-dir \
+        <ULTRACK_RUN_ROOT>/gowt1-seq01-full-watershed/input_labels \
+    --cellpose-label-dir \
+        <ULTRACK_RUN_ROOT>/gowt1-seq01-full-cellpose/input_labels \
+    --stardist-label-dir \
+        <ULTRACK_RUN_ROOT>/gowt1-seq01-full-stardist/input_labels \
+    --output-dir <ULTRACK_RUN_ROOT>/gowt1-seq01-full-ensemble \
+    --sequence 01
+```
+
+All three label directories must contain the same requested frame numbers and
+image shape. Use `--frame-start` and `--frame-stop` for a subset check. A full
+run writes `01_RES` or `02_RES`, while a subset writes `subset_RES`. GOWT1
+ensemble results are additional project experiments because the selected
+Ultrack paper does not report a matching GOWT1 benchmark.

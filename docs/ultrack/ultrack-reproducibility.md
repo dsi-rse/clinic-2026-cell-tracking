@@ -23,6 +23,7 @@
     - [Evaluation and reporting rules](#evaluation-and-reporting-rules)
   - [Adding another dataset](#adding-another-dataset)
 
+
 ## Purpose
 
 This document records how the project runs and evaluates Ultrack benchmarks.
@@ -465,6 +466,11 @@ Cellpose uses the separate `cell-tracking-ultrack-cellpose` environment, which
 pins NumPy 2.0.2 for compatibility with Cellpose 3. The project source is made
 available with `export PYTHONPATH="$PWD/src"` rather than an editable install,
 because the main project currently requires NumPy 2.2 or newer.
+
+After all three single-method label directories are available, the reusable
+[`run_2d_ensemble.py`](../../scripts/ultrack/run_2d_ensemble.py) script combines
+their foreground maps with logical OR, averages their contour maps, and runs
+the common Ultrack stages without rerunning the segmentation models.
 
 Plots remain in the notebooks, but verbose solver outputs are cleared before
 committing because they can contain identifying license information.
