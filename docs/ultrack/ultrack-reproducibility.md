@@ -3,6 +3,7 @@
 - [Ultrack benchmark reproducibility](#ultrack-benchmark-reproducibility)
   - [Purpose](#purpose)
   - [Methodology and status overview](#methodology-and-status-overview)
+  - [Results](#results)
   - [General workflow](#general-workflow)
   - [Shared cluster conventions](#shared-cluster-conventions)
   - [Fluo-N2DL-HeLa: StarDist input](#fluo-n2dl-hela-stardist-input)
@@ -47,7 +48,7 @@ actually run by this project are marked as reproduced or in progress.
 
 | Dataset | Segmentation input | Role | Project status | Valid comparison |
 | --- | --- | --- | --- | --- |
-| `Fluo-N2DL-HeLa` | Watershed | Published single-method comparator | Not run | Published values only |
+| `Fluo-N2DL-HeLa` | Watershed | Published single-method comparator | Complete and evaluated for sequences 01 and 02 | Compare with the matching published watershed row, while documenting the incomplete parameter specification |
 | `Fluo-N2DL-HeLa` | Cellpose `cyto2` | Published single-method comparator | Not run | Published values only |
 | `Fluo-N2DL-HeLa` | StarDist `2D_versatile_fluo` | Selected reproduction method | Complete for sequences 01 and 02 | Compare with the matching published StarDist row |
 | `Fluo-N2DL-HeLa` | Watershed + Cellpose + StarDist ensemble | Best published experiment for these sequences | Not run | Published values only |
@@ -61,6 +62,14 @@ StarDist first because the paper used publicly available pretrained weights
 without dataset-specific fine-tuning. Reproducing the other three HeLa rows
 would be separate experiments and would require recording their own inputs,
 parameters, runtimes, and result directories.
+
+## Results
+
+Completed scores, runtime summaries, interpretation, and follow-up hypotheses
+are recorded separately in
+[`ultrack-results.md`](ultrack-results.md). Keeping the numerical results in a
+separate document allows this guide to remain focused on reproducible setup and
+execution as more segmentation methods and datasets are added.
 
 ## General workflow
 
