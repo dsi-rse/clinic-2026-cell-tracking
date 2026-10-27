@@ -255,3 +255,90 @@ important even though its aggregate scores are high.
    rather than recording only that GPU use was requested.
 3. Use the saved Cellpose labels as one of the three inputs to the planned
    watershed, Cellpose, and StarDist ensemble.
+
+## Fluo-N2DH-GOWT1 Cellpose
+
+### Experiment status
+
+Both public training sequences were processed with Cellpose labels followed by
+Ultrack hypothesis generation, linking, solving, and CTC export. Both CTC
+result directories passed `py-ctcmetrics` validation and were evaluated on
+2026-10-27.
+
+The ECCV 2024 Ultrack paper does not report a matching GOWT1 experiment.
+Therefore, these scores are an additional project experiment rather than a
+reproduction of a published Ultrack benchmark.
+
+### Evaluation results
+
+| Sequence | DET | SEG | TRA | `OP_CTB` |
+| --- | ---: | ---: | ---: | ---: |
+| 01 | 0.956608 | 0.850406 | 0.956903 | 0.903654 |
+| 02 | 0.849424 | 0.853874 | 0.849609 | 0.851741 |
+
+The reports are stored outside Git at:
+
+```text
+<ULTRACK_RUN_ROOT>/gowt1-seq01-full-cellpose/evaluation/01_RES/
+<ULTRACK_RUN_ROOT>/gowt1-seq02-full-cellpose/evaluation/02_RES/
+```
+
+Selected tracking-error diagnostics are:
+
+| Sequence | Node splits | False negatives | False positives | Edges deleted | Edges added | Edges changed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 01 | 0 | 76 | 133 | 0 | 83 | 1 |
+| 02 | 0 | 358 | 210 | 0 | 368 | 1 |
+
+### Interpretation
+
+Segmentation quality is similar across the two sequences: their SEG scores
+differ by less than 0.004. Sequence 02 has substantially lower DET and TRA,
+which reduces CTB by approximately 0.052 relative to sequence 01. Its error
+report contains more false negatives and missing temporal edges, suggesting
+that detection and temporal continuity are the main weaknesses rather than
+boundary accuracy on the annotated segmentation frames.
+
+The result should still be reviewed visually. Aggregate CTC scores can hide
+localized failures such as missed dim nuclei, short broken tracks, or errors
+in crowded frames.
+
+### Configuration
+
+The sequence 01 and sequence 02 `run_report.json` files verify that both runs
+used the configuration below.
+
+| Item | Recorded value |
+| --- | --- |
+| Cellpose model | Pretrained `cyto2` |
+| Cellpose | 3.1.1.3 |
+| PyTorch | 2.14.1 |
+| NumPy | 2.0.2 |
+| Ultrack | 0.8.0 |
+| Channels | `[0, 0]` |
+| Diameter | Automatic (`None`) |
+| Flow threshold | 0.4 |
+| Cell-probability threshold | 0.0 |
+| GPU | NVIDIA A100 80GB PCIe; GPU execution requested and used |
+| Label-to-contour sigma | 4 pixels |
+
+### Runtime and output summary
+
+| Item | Sequence 01 | Sequence 02 |
+| --- | ---: | ---: |
+| Total recorded pipeline runtime | 1,883.0 seconds | 1,806.9 seconds |
+| Cellpose inference | 76.3 seconds | 117.7 seconds |
+| Label-to-contour conversion | 8.4 seconds | 8.8 seconds |
+| Ultrack hypothesis generation | 680.7 seconds | 1,011.0 seconds |
+| Ultrack linking | 1,064.3 seconds | 657.7 seconds |
+| Ultrack solving | 53.2 seconds | 11.9 seconds |
+| Mean Cellpose labels per frame | 22.7 | 25.1 |
+| Mean selected Ultrack objects per frame | 23.0 | 25.8 |
+| Unique predicted tracks | 46 | 67 |
+| Lineage entries | 10 | 14 |
+| Ground-truth lineage records | 28 | 58 |
+
+The sequence 01 and sequence 02 workflows took approximately 31.4 and 30.1
+minutes, respectively. The A100 record is important context, but most of each
+runtime was spent in Ultrack's CPU-based hypothesis-generation and linking
+stages rather than Cellpose inference.

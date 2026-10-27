@@ -52,6 +52,7 @@ actually run by this project are marked as reproduced or in progress.
 | `Fluo-N2DL-HeLa` | Cellpose `cyto2` | Published single-method comparator | Complete and evaluated for sequences 01 and 02 | Compare with the matching published Cellpose row while documenting software and hardware differences |
 | `Fluo-N2DL-HeLa` | StarDist `2D_versatile_fluo` | Selected reproduction method | Complete for sequences 01 and 02 | Compare with the matching published StarDist row |
 | `Fluo-N2DL-HeLa` | Watershed + Cellpose + StarDist ensemble | Best published experiment for these sequences | Not run | Published values only |
+| `Fluo-N2DH-GOWT1` | Cellpose `cyto2` | Additional 2D project experiment | Complete and evaluated for sequences 01 and 02 | No matching published Ultrack benchmark; report as a project result |
 | `Fluo-C3DL-MDA231` | Trained 3D U-Net foreground and boundary maps | Published CTC submission method | Documented; GPU run not yet completed | A public-training run may be compared descriptively, but cannot reproduce the hidden-test score directly |
 | `Fluo-C3DL-MDA231` | Raw-image foreground and contour processing | Project 3D subset baseline | In progress for frames 000--002 | Qualitative and sparse-slice checks only; not the published benchmark |
 
@@ -627,10 +628,10 @@ run:
 | Authors' published hidden-test submission | Cite SEG 0.549, TRA 0.818, and CTB 0.683 | Do not imply that hidden labels are locally available |
 
 At the time of writing, the HeLa watershed, Cellpose, and StarDist experiments
-are complete and evaluated. The raw MDA231 subset is an additional experiment,
-and the official MDA231 U-Net GPU workflow is documented but not yet completed.
-This status should be updated only after the corresponding outputs and run
-records have been checked.
+and the GOWT1 Cellpose experiment are complete and evaluated. The raw MDA231
+subset is an additional experiment, and the official MDA231 U-Net GPU workflow
+is documented but not yet completed. This status should be updated only after
+the corresponding outputs and run records have been checked.
 
 ## Adding another dataset
 
