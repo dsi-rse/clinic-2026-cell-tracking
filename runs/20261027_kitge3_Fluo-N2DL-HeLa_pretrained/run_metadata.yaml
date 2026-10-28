@@ -36,11 +36,6 @@ raw_output_location:
   det_copies: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa/{01,02}_RES
   tracking: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa/{01,02}_RES
   score_csvs: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/{seg_eval,tracking_results}/Fluo-N2DL-HeLa_{01,02}_*.csv
-raw_output_location:
-  segmentation: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DL-HeLa/{01,02}_RES_Fluo-N2DL-HeLa_GT+ST_model_0.35_0.07   # not in git
-  det_copies: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa/{01,02}_RES                                                                          # made by jobs/seg_to_tracks.py
-  tracking: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa/{01,02}_RES
-  score_csvs: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/{seg_eval,tracking_results}/Fluo-N2DL-HeLa_{01,02}_*.csv
 evaluation_command: >
   py-ctcmetrics 1.3.3: ctc_evaluate --gt <seq>_GT --res seg_eval/Fluo-N2DL-HeLa/<seq>_RES --det --seg (segmentation, jobs/seg_eval.sh);
   ctc_evaluate --gt <seq>_GT --res tracking_results/Fluo-N2DL-HeLa/<seq>_RES (tracking, all metrics, jobs/track_eval.sh)
