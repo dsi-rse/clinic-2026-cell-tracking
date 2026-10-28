@@ -159,7 +159,7 @@ done
 On the official CTC website, this method reported a SEG value of 0.883, a DET value of 0.994, and an OP_CSB value of 0.938. 
 These values were the results that came from the hidden challenge datasets.
 
-The values I obtained when calculating the evaluation metrics on training sequences 01 + 02 were a SEG value of 
+The values I obtained when calculating the evaluation metrics on training sequences 01 + 02 were a SEG value of 0.8558 and 0.8867
 
 The model json also confirms how the selected model was built and evaluated, even including the OP_CSB of .9302 they found:
 
