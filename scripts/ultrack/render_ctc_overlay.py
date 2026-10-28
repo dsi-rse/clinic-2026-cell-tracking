@@ -76,6 +76,11 @@ def parse_args() -> argparse.Namespace:
         help="Draw GT and prediction track IDs; best used with --crop.",
     )
     parser.add_argument(
+        "--tracking-only",
+        action="store_true",
+        help="Render only the continuous boundary and track-ID panel.",
+    )
+    parser.add_argument(
         "--only-annotated",
         action="store_true",
         help="Skip frames that do not have the selected ground-truth mask.",
@@ -201,6 +206,7 @@ def main() -> None:
                 iou_threshold=args.iou_threshold,
                 show_track_ids=args.show_track_ids,
                 maximum_track_labels=args.max_track_labels,
+                tracking_only=args.tracking_only,
             )
         )
 

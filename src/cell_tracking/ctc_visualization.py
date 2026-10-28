@@ -194,6 +194,7 @@ def render_overlay_frame(
     iou_threshold: float,
     show_track_ids: bool,
     maximum_track_labels: int,
+    tracking_only: bool,
 ) -> Image.Image:
     """Render boundaries and segmentation agreement for one 2D frame."""
     if raw.ndim != EXPECTED_DIMENSIONS or prediction.ndim != EXPECTED_DIMENSIONS:
@@ -229,39 +230,41 @@ def render_overlay_frame(
         coincident_boundary = ground_truth_boundary & prediction_boundary
         boundary_panel[coincident_boundary] = RGB_MAXIMUM
 
-        overlap = (ground_truth > 0) & (prediction > 0)
-        prediction_only = (prediction > 0) & (ground_truth == 0)
-        ground_truth_only = (ground_truth > 0) & (prediction == 0)
-        blend_color(agreement_panel, overlap, OVERLAP_COLOR, alpha)
-        blend_color(
-            agreement_panel,
-            prediction_only,
-            PREDICTION_ONLY_COLOR,
-            alpha,
-        )
-        blend_color(
-            agreement_panel,
-            ground_truth_only,
-            GROUND_TRUTH_ONLY_COLOR,
-            alpha,
-        )
-        match_counts = match_instances(ground_truth, prediction, iou_threshold)
+        if not tracking_only:
+            overlap = (ground_truth > 0) & (prediction > 0)
+            prediction_only = (prediction > 0) & (ground_truth == 0)
+            ground_truth_only = (ground_truth > 0) & (prediction == 0)
+            blend_color(agreement_panel, overlap, OVERLAP_COLOR, alpha)
+            blend_color(
+                agreement_panel,
+                prediction_only,
+                PREDICTION_ONLY_COLOR,
+                alpha,
+            )
+            blend_color(
+                agreement_panel,
+                ground_truth_only,
+                GROUND_TRUTH_ONLY_COLOR,
+                alpha,
+            )
+            match_counts = match_instances(ground_truth, prediction, iou_threshold)
 
     height, width = grayscale.shape
     canvas = Image.new(
         "RGB",
-        (width * 2, height + DEFAULT_HEADER_HEIGHT),
+        (width if tracking_only else width * 2, height + DEFAULT_HEADER_HEIGHT),
         color=(18, 18, 18),
     )
     canvas.paste(Image.fromarray(boundary_panel), (0, DEFAULT_HEADER_HEIGHT))
-    canvas.paste(Image.fromarray(agreement_panel), (width, DEFAULT_HEADER_HEIGHT))
+    if not tracking_only:
+        canvas.paste(Image.fromarray(agreement_panel), (width, DEFAULT_HEADER_HEIGHT))
 
     draw = ImageDraw.Draw(canvas)
     font = _load_font(DEFAULT_TEXT_SIZE)
     title = f"Frame {frame_number:03d} | GT source: {ground_truth_source}"
-    if match_counts is None:
+    if ground_truth is None:
         title += " | ground truth unavailable"
-    else:
+    elif match_counts is not None:
         title += (
             f" | IoU >= {iou_threshold:g}: matched {match_counts.matched}, "
             f"unmatched prediction {match_counts.unmatched_prediction}, "
@@ -274,12 +277,13 @@ def render_overlay_frame(
         fill=(230, 230, 230),
         font=font,
     )
-    draw.text(
-        (width + 10, 34),
-        "Pixels: overlap green | prediction-only red | GT-only cyan",
-        fill=(230, 230, 230),
-        font=font,
-    )
+    if not tracking_only:
+        draw.text(
+            (width + 10, 34),
+            "Pixels: overlap green | prediction-only red | GT-only cyan",
+            fill=(230, 230, 230),
+            font=font,
+        )
 
     if show_track_ids:
         if ground_truth is not None:

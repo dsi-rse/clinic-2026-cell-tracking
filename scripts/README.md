@@ -172,7 +172,8 @@ threshold.
 Use `TRA` masks for a continuous tracking movie. Ground-truth and prediction
 track IDs can be added for a small crop with `--show-track-ids`. Use `SEG` for
 segmentation-specific review, noting that CTC segmentation annotations may be
-available for only a subset of frames.
+available for only a subset of frames. Add `--tracking-only` to omit the
+segmentation-agreement panel and its instance-match counts when using `TRA`.
 
 ```bash
 export CTC_ROOT=<PROJECT_DATA_ROOT>
@@ -217,6 +218,7 @@ python scripts/ultrack/render_ctc_overlay.py \
     --output-path \
         "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_crop.gif" \
     --crop 100 500 200 700 \
+    --tracking-only \
     --show-track-ids \
     --max-track-labels 30 \
     --fps 4 \
