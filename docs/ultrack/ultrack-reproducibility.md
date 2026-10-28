@@ -1,30 +1,38 @@
 # Ultrack benchmark reproducibility
 
 - [Ultrack benchmark reproducibility](#ultrack-benchmark-reproducibility)
-  - [Purpose](#purpose)
+  - [Overview](#overview)
   - [Methodology and status overview](#methodology-and-status-overview)
   - [Results](#results)
   - [General workflow](#general-workflow)
   - [Shared cluster conventions](#shared-cluster-conventions)
-  - [Fluo-N2DL-HeLa: StarDist input](#fluo-n2dl-hela-stardist-input)
-    - [Reproduction target](#reproduction-target)
+  - [Reusable 2D methods and commands](#reusable-2d-methods-and-commands)
+  - [Fluo-N2DL-HeLa](#fluo-n2dl-hela)
+    - [Dataset and comparison target](#dataset-and-comparison-target)
     - [Data and software](#data-and-software)
-    - [StarDist inference](#stardist-inference)
+    - [StarDist configuration](#stardist-configuration)
     - [Ultrack configuration](#ultrack-configuration)
     - [Full-sequence run records](#full-sequence-run-records)
     - [Output layout](#output-layout)
-    - [Evaluation results](#evaluation-results)
+    - [Evaluation results and commands](#evaluation-results-and-commands)
+    - [Executable records and environment notes](#executable-records-and-environment-notes)
+  - [Fluo-N2DH-GOWT1](#fluo-n2dh-gowt1)
+    - [Dataset and comparison scope](#dataset-and-comparison-scope)
+    - [Configuration](#configuration)
+    - [Commands](#commands)
+    - [Evaluation](#evaluation)
   - [Fluo-C3DL-MDA231: published U-Net and raw baseline](#fluo-c3dl-mda231-published-u-net-and-raw-baseline)
-    - [Reproduction target](#reproduction-target-1)
+    - [Reproduction target](#reproduction-target)
     - [Data](#data)
     - [Published 3D U-Net methodology](#published-3d-u-net-methodology)
     - [Published-workflow resource requirements](#published-workflow-resource-requirements)
+    - [Official sequence 01 execution](#official-sequence-01-execution)
     - [Project raw-image subset methodology](#project-raw-image-subset-methodology)
     - [Evaluation and reporting rules](#evaluation-and-reporting-rules)
   - [Adding another dataset](#adding-another-dataset)
 
 
-## Purpose
+## Overview
 
 This document records how the project runs and evaluates Ultrack benchmarks.
 It is intended to grow as additional datasets and segmentation inputs are
@@ -52,11 +60,12 @@ actually run by this project are marked as reproduced or in progress.
 | `Fluo-N2DL-HeLa` | Watershed | Published single-method comparator | Complete and evaluated for sequences 01 and 02 | Compare with the matching published watershed row, while documenting the incomplete parameter specification |
 | `Fluo-N2DL-HeLa` | Cellpose `cyto2` | Published single-method comparator | Complete and evaluated for sequences 01 and 02 | Compare with the matching published Cellpose row while documenting software and hardware differences |
 | `Fluo-N2DL-HeLa` | StarDist `2D_versatile_fluo` | Selected reproduction method | Complete for sequences 01 and 02 | Compare with the matching published StarDist row |
-| `Fluo-N2DL-HeLa` | Watershed + Cellpose + StarDist ensemble | Best published experiment for these sequences | Not run | Published values only |
+| `Fluo-N2DL-HeLa` | Watershed + Cellpose + StarDist ensemble | Best published experiment for these sequences | Complete and evaluated for sequences 01 and 02 | Compare with the matching published ensemble rows while documenting environment differences |
 | `Fluo-N2DH-GOWT1` | Cellpose `cyto2` | Additional 2D project experiment | Complete and evaluated for sequences 01 and 02 | No matching published Ultrack benchmark; report as a project result |
 | `Fluo-N2DH-GOWT1` | StarDist `2D_versatile_fluo` | Additional 2D project experiment | Complete and evaluated for sequences 01 and 02 | No matching published Ultrack benchmark; report as a project result |
 | `Fluo-N2DH-GOWT1` | Watershed | Additional 2D project baseline | Complete and evaluated for sequences 01 and 02 | No matching published Ultrack benchmark; report as an oversegmented project baseline |
-| `Fluo-C3DL-MDA231` | Trained 3D U-Net foreground and boundary maps | Published CTC submission method | Documented; GPU run not yet completed | A public-training run may be compared descriptively, but cannot reproduce the hidden-test score directly |
+| `Fluo-N2DH-GOWT1` | Watershed + Cellpose + StarDist ensemble | Additional 2D project experiment | Complete and evaluated for sequences 01 and 02 | No matching published Ultrack benchmark; compare only with the project's single-method results |
+| `Fluo-C3DL-MDA231` | Trained 3D U-Net foreground and boundary maps | Published CTC submission method | Official sequence 01 GPU run in progress; completion not yet verified | A public-training run may be compared descriptively, but cannot reproduce the hidden-test score directly |
 | `Fluo-C3DL-MDA231` | Raw-image foreground and contour processing | Project 3D subset baseline | In progress for frames 000--002 | Qualitative and sparse-slice checks only; not the published benchmark |
 
 For HeLa, the paper converted every segmentation method's instance labels into
@@ -64,8 +73,11 @@ a binary foreground map and a contour map. Its ensemble combined foreground
 maps with a logical OR and averaged the contour maps. This project selected
 StarDist first because the paper used publicly available pretrained weights
 without dataset-specific fine-tuning. Watershed and Cellpose have since been
-completed as separate experiments. The remaining ensemble experiment requires
-its own inputs, parameters, runtimes, and result directories.
+completed as separate experiments. The HeLa and GOWT1 ensembles are also
+complete and evaluated. Their evaluation metrics are recorded in
+[`ultrack-results.md`](ultrack-results.md), together with their run-report
+configuration, runtime, and output summaries. The supplied reports do not
+capture the worker settings or hardware allocation.
 
 ## Results
 
@@ -134,9 +146,94 @@ The project uses a separate environment for CTC evaluation so the working
 tracking environment is not changed. See
 [`scripts/README.md`](../../scripts/README.md) for the evaluation command.
 
-## Fluo-N2DL-HeLa: StarDist input
+## Reusable 2D methods and commands
 
-### Reproduction target
+The completed HeLa and GOWT1 experiments use the following method
+configurations. All label-derived methods use a contour sigma of 4 pixels.
+
+| Method | Configuration |
+| --- | --- |
+| Cellpose | Pretrained `cyto2`; channels `[0, 0]`; automatic diameter; flow threshold 0.4; cell-probability threshold 0; GPU requested |
+| StarDist | Pretrained `2D_versatile_fluo`; gamma 1; block size 560; minimum overlap 96 |
+| Watershed | Per-frame Otsu foreground; Gaussian sigma 1; h-minima 2; minimum input-object size 20 pixels |
+| Ensemble | Logical OR of the three foreground maps; arithmetic mean of the three contour maps; saved labels reused without rerunning inference |
+
+The reusable single-method runner is
+[`run_2d_benchmark.py`](../../scripts/ultrack/run_2d_benchmark.py). Set the
+dataset variables first. Use the HeLa values here; the GOWT1 section gives the
+corresponding GOWT1 values.
+
+```bash
+export DATASET=Fluo-N2DL-HeLa
+export RUN_PREFIX=hela
+export SEQUENCE=01
+```
+
+Run Cellpose from the Cellpose environment:
+
+```bash
+micromamba activate cell-tracking-ultrack-cellpose
+export PYTHONPATH="$PWD/src"
+
+python scripts/ultrack/run_2d_benchmark.py \
+    --input-dir "$CTC_ROOT/ctc/$DATASET/$SEQUENCE" \
+    --output-dir "$ULTRACK_RUN_ROOT/${RUN_PREFIX}-seq${SEQUENCE}-full-cellpose" \
+    --sequence "$SEQUENCE" \
+    --method cellpose \
+    --cellpose-gpu
+```
+
+Run StarDist from the StarDist environment. `KERAS_HOME` must be set before
+Python imports TensorFlow or StarDist.
+
+```bash
+micromamba activate cell-tracking-ultrack-stardist
+export KERAS_HOME=/path/to/DSC_CTC/models/keras-cache
+
+python scripts/ultrack/run_2d_benchmark.py \
+    --input-dir "$CTC_ROOT/ctc/$DATASET/$SEQUENCE" \
+    --output-dir "$ULTRACK_RUN_ROOT/${RUN_PREFIX}-seq${SEQUENCE}-full-stardist" \
+    --sequence "$SEQUENCE" \
+    --method stardist
+```
+
+Run watershed from the base Ultrack environment:
+
+```bash
+micromamba activate cell-tracking-ultrack
+
+python scripts/ultrack/run_2d_benchmark.py \
+    --input-dir "$CTC_ROOT/ctc/$DATASET/$SEQUENCE" \
+    --output-dir "$ULTRACK_RUN_ROOT/${RUN_PREFIX}-seq${SEQUENCE}-full-watershed" \
+    --sequence "$SEQUENCE" \
+    --method watershed
+```
+
+The single-method runner defaults to four segmentation workers, one linking
+worker, and four solver threads. The GOWT1 StarDist sequence 01 run is a known
+exception: it used one segmentation worker, so add
+`--segmentation-workers 1` when reproducing that particular runtime.
+
+After all three `input_labels` directories exist, run the ensemble from the
+base Ultrack environment:
+
+```bash
+python scripts/ultrack/run_2d_ensemble.py \
+    --input-dir "$CTC_ROOT/ctc/$DATASET/$SEQUENCE" \
+    --watershed-label-dir "$ULTRACK_RUN_ROOT/${RUN_PREFIX}-seq${SEQUENCE}-full-watershed/input_labels" \
+    --cellpose-label-dir "$ULTRACK_RUN_ROOT/${RUN_PREFIX}-seq${SEQUENCE}-full-cellpose/input_labels" \
+    --stardist-label-dir "$ULTRACK_RUN_ROOT/${RUN_PREFIX}-seq${SEQUENCE}-full-stardist/input_labels" \
+    --output-dir "$ULTRACK_RUN_ROOT/${RUN_PREFIX}-seq${SEQUENCE}-full-ensemble" \
+    --sequence "$SEQUENCE"
+```
+
+Repeat each command with `SEQUENCE=02` for the second public training
+sequence. Choose a new output directory for a new experiment; use `--overwrite`
+only when deliberately replacing a known run.
+
+## Fluo-N2DL-HeLa
+
+### Dataset and comparison target
 
 The targets are the StarDist rows for Files 1 and 2 in Table 3 of the ECCV 2024
 Ultrack paper. The published workflow applies a pretrained StarDist
@@ -209,7 +306,7 @@ micromamba activate cell-tracking-ultrack-stardist
 python -m pip install -e .
 ```
 
-### StarDist inference
+### StarDist configuration
 
 Each image was normalized independently with Ultrack's `normalize` function
 using `gamma=1.0`. Instance labels were then predicted with the pretrained
@@ -363,7 +460,7 @@ this document is their run record. The `run_report.json` written by
 `run_2d_benchmark.py` does not exist for these runs because they were executed
 from the notebooks, not the script.
 
-### Evaluation results
+### Evaluation results and commands
 
 The complete `01_RES` and `02_RES` outputs passed structural validation and
 were evaluated with the pinned `py-ctcmetrics` 1.3.3 environment. The
@@ -449,32 +546,106 @@ python scripts/ultrack/evaluate_ctc_result.py \
 These commands were run from the repository root using the
 `cell-tracking-ctc-evaluation` environment.
 
+### Executable records and environment notes
+
 The executable records for these experiments are:
 
 - [`02_hela_stardist_seq01_benchmark.ipynb`](../../notebooks/ultrack/02_hela_stardist_seq01_benchmark.ipynb); and
 - [`02_hela_stardist_seq02_benchmark.ipynb`](../../notebooks/ultrack/02_hela_stardist_seq02_benchmark.ipynb).
 
-The reusable
-[`run_2d_benchmark.py`](../../scripts/ultrack/run_2d_benchmark.py) script
-extracts the common raw-image loading, label saving, label-to-contour
-conversion, Ultrack stages, CTC export, and run reporting from these notebooks.
-Its `--method` option supports StarDist, watershed, and Cellpose without
-duplicating the tracking workflow. All three single-method workflows are now
-complete and evaluated for both HeLa sequences. Their numerical results and
-interpretation are recorded in [`ultrack-results.md`](ultrack-results.md).
+The reusable runner extracts the common raw-image loading, label saving,
+label-to-contour conversion, Ultrack stages, CTC export, and run reporting
+from these notebooks. Its `--method` option supports StarDist, watershed, and
+Cellpose without duplicating the tracking workflow. All three single-method
+workflows are complete and evaluated for both HeLa sequences. Their numerical
+results and interpretation are recorded in
+[`ultrack-results.md`](ultrack-results.md).
 
 Cellpose uses the separate `cell-tracking-ultrack-cellpose` environment, which
 pins NumPy 2.0.2 for compatibility with Cellpose 3. The project source is made
 available with `export PYTHONPATH="$PWD/src"` rather than an editable install,
 because the main project currently requires NumPy 2.2 or newer.
 
-After all three single-method label directories are available, the reusable
+The reusable
 [`run_2d_ensemble.py`](../../scripts/ultrack/run_2d_ensemble.py) script combines
-their foreground maps with logical OR, averages their contour maps, and runs
-the common Ultrack stages without rerunning the segmentation models.
+the saved foreground maps with logical OR, averages their contour maps, and
+runs the common Ultrack stages without rerunning the segmentation models.
 
 Plots remain in the notebooks, but verbose solver outputs are cleared before
 committing because they can contain identifying license information.
+
+## Fluo-N2DH-GOWT1
+
+### Dataset and comparison scope
+
+Both public training sequences, `01` and `02`, contain 92 frames and were run
+with Cellpose, StarDist, watershed, and the three-method ensemble. The ECCV
+2024 Ultrack paper does not report a matching GOWT1 experiment. These runs are
+therefore additional project experiments, not reproductions of a published
+Ultrack benchmark.
+
+Gold segmentation and tracking annotations were used only for evaluation and
+visual review. They were not supplied to the segmentation methods, ensemble,
+or Ultrack.
+
+### Configuration
+
+GOWT1 uses the same four method configurations and reusable scripts documented
+in [Reusable 2D methods and commands](#reusable-2d-methods-and-commands). The
+dataset-specific execution details are:
+
+| Item | Recorded value |
+| --- | --- |
+| Dataset | `Fluo-N2DH-GOWT1` |
+| Sequences | `01` and `02` |
+| Frames per sequence | 92 |
+| Cellpose hardware | NVIDIA A100 80GB PCIe |
+| StarDist sequence 01 segmentation workers | 1 |
+| StarDist sequence 02 segmentation workers | 4 |
+| Matching published Ultrack result | None |
+
+The unequal StarDist worker counts mean that its sequence 01 and sequence 02
+runtimes are not directly comparable. The ensemble run reports record the
+method combination and stage runtimes but do not capture the worker settings
+or hardware allocation.
+
+### Commands
+
+Set the GOWT1 dataset variables, then use the Cellpose, StarDist, watershed,
+and ensemble commands from the reusable 2D section:
+
+```bash
+export DATASET=Fluo-N2DH-GOWT1
+export RUN_PREFIX=gowt1
+export SEQUENCE=01
+```
+
+For the historical StarDist sequence 01 configuration, append
+`--segmentation-workers 1` to the single-method command. Repeat the workflows
+with `SEQUENCE=02`; the sequence 02 StarDist run used the default four
+segmentation workers.
+
+### Evaluation
+
+GOWT1 evaluation omits the `--published-*` arguments because there is no
+matching published Ultrack row. For example:
+
+```bash
+export SEQUENCE=01
+export METHOD=cellpose
+
+python scripts/ultrack/evaluate_ctc_result.py \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-N2DH-GOWT1/${SEQUENCE}_GT" \
+    --result-dir "$ULTRACK_RUN_ROOT/gowt1-seq${SEQUENCE}-full-${METHOD}/${SEQUENCE}_RES" \
+    --dataset Fluo-N2DH-GOWT1 \
+    --method "ultrack-$METHOD" \
+    --num-workers 4
+```
+
+Set `METHOD` to `cellpose`, `stardist`, `watershed`, or `ensemble`, and repeat
+with `SEQUENCE=02`. The completed scores, run-report summaries, cross-method
+comparison, and ensemble carry-over hypothesis are recorded in the
+[GOWT1 results section](ultrack-results.md#fluo-n2dh-gowt1).
 
 ## Fluo-C3DL-MDA231: published U-Net and raw baseline
 
@@ -581,6 +752,71 @@ It uses a private staging directory because the official script writes a
 `01_RES` directory below its configured data root. The shared CTC dataset must
 not be used as that writable output root.
 
+### Official sequence 01 execution
+
+The MDA231 U-Net workflow uses the authors' official sequence script,
+`Fluo-C3DL-MDA231-01.sh`, from the checked-out submission repository. It does
+not use the project's `run_2d_benchmark.py` script. The official sequence 01
+run was launched on an allocated GPU node on 2026-10-27; its completion and
+outputs have not yet been verified.
+
+Set the shared data, run, and official-submission repository roots:
+
+```bash
+export CTC_ROOT=/net/spaces/clinic/CLS/DSC_CTC
+export ULTRACK_RUN_ROOT=/net/spaces/clinic/CLS/DSC_CTC/runs/ultrack
+export ULTRACK_CTC_REPO=/net/spaces/clinic/CLS/DSC_CTC/models/ultrack_CTC_submission
+
+export MDA_RUN_ROOT="$ULTRACK_RUN_ROOT/mda231-seq01-official-unet"
+```
+
+Before launching the workflow, verify that the official script and pretrained
+checkpoint exist and record the allocated NVIDIA GPU:
+
+```bash
+ls "$ULTRACK_CTC_REPO/Fluo-C3DL-MDA231-01.sh"
+ls "$ULTRACK_CTC_REPO/weights/Fluo-C3DL-MDA231.ckpt"
+nvidia-smi
+```
+
+Do not rerun the authors' `download.sh` when the checkpoint is already
+present. Reusing the existing checkpoint avoids an unnecessary download and
+helps preserve the exact model file used for the experiment.
+
+The run uses a writable staging directory below the Ultrack run root. Only the
+raw sequence is linked into this directory; the shared CTC dataset remains
+unchanged.
+
+```bash
+mkdir -p "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231"
+mkdir -p "$MDA_RUN_ROOT/work"
+
+if [ ! -e "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231/01" ]; then
+    ln -s \
+        "$CTC_ROOT/ctc/Fluo-C3DL-MDA231/01" \
+        "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231/01"
+fi
+
+cd "$ULTRACK_CTC_REPO"
+
+DATA_DIR="$MDA_RUN_ROOT/data" \
+WK_DIR="$MDA_RUN_ROOT/work" \
+bash Fluo-C3DL-MDA231-01.sh
+```
+
+If the workflow completes successfully, the expected public sequence 01 CTC
+result directory is:
+
+```text
+/net/spaces/clinic/CLS/DSC_CTC/runs/ultrack/mda231-seq01-official-unet/data/Fluo-C3DL-MDA231/01_RES
+```
+
+The corresponding preparation notebook is
+[`03_mda231_seq01_benchmark.ipynb`](../../notebooks/ultrack/03_mda231_seq01_benchmark.ipynb).
+After the run finishes, record the submission repository revision, checkpoint
+identity, GPU details, stage runtimes, output counts, warnings, deviations,
+and CTC evaluation in this document and in `ultrack-results.md`.
+
 ### Project raw-image subset methodology
 
 Before attempting the separate GPU workflow, the project uses frames 000--002
@@ -635,11 +871,13 @@ run:
 | Complete public sequence with the authors' U-Net checkpoint | CTC SEG, TRA, and `OP_CTB` against public `01_GT`, plus qualitative review | Do not call the values a direct reproduction of hidden-test scores |
 | Authors' published hidden-test submission | Cite SEG 0.549, TRA 0.818, and CTB 0.683 | Do not imply that hidden labels are locally available |
 
-At the time of writing, the HeLa and GOWT1 watershed, Cellpose, and StarDist
-experiments are complete and evaluated. The raw MDA231 subset is an additional
-experiment, and the official MDA231 U-Net GPU workflow is documented but not
-yet completed. This status should be updated only after the corresponding
-outputs and run records have been checked.
+At the time of writing, the HeLa and GOWT1 watershed, Cellpose, StarDist, and
+ensemble experiments are complete and evaluated. Their available run-report
+summaries are recorded in the results document. The raw MDA231 subset is an
+additional experiment, and the official MDA231 sequence 01 U-Net workflow is
+running on an allocated GPU node. Its completion has not yet been verified.
+This status should be updated only after the corresponding outputs and run
+records have been checked.
 
 ## Adding another dataset
 

@@ -9,25 +9,77 @@ Large masks, model files, and other run outputs remain in approved cluster
 storage. Paths below use the safe alias `<ULTRACK_RUN_ROOT>` rather than a
 personal or machine-specific path.
 
+- [Ultrack experiment results](#ultrack-experiment-results)
+  - [Fluo-N2DL-HeLa](#fluo-n2dl-hela)
+    - [Overall comparison](#overall-comparison)
+    - [Cellpose](#cellpose)
+      - [Experiment status](#experiment-status)
+      - [Configuration](#configuration)
+      - [Evaluation results](#evaluation-results)
+      - [Runtime and output summary](#runtime-and-output-summary)
+      - [Follow-up](#follow-up)
+    - [StarDist](#stardist)
+      - [Experiment status](#experiment-status-1)
+      - [Evaluation results](#evaluation-results-1)
+      - [Configuration](#configuration-1)
+      - [Runtime and output summary](#runtime-and-output-summary-1)
+    - [Watershed baseline](#watershed-baseline)
+      - [Experiment status](#experiment-status-2)
+      - [Configuration](#configuration-2)
+      - [Evaluation results](#evaluation-results-2)
+      - [Runtime and output summary](#runtime-and-output-summary-2)
+      - [Interpretation](#interpretation)
+      - [Follow-up hypotheses](#follow-up-hypotheses)
+    - [Ensemble](#ensemble)
+      - [Experiment status](#experiment-status-3)
+      - [Evaluation results](#evaluation-results-3)
+      - [Interpretation](#interpretation-1)
+  - [Fluo-N2DH-GOWT1](#fluo-n2dh-gowt1)
+    - [Overall comparison](#overall-comparison-1)
+    - [Cellpose](#cellpose-1)
+      - [Experiment status](#experiment-status-4)
+      - [Evaluation results](#evaluation-results-4)
+      - [Interpretation](#interpretation-2)
+      - [Configuration](#configuration-3)
+      - [Runtime and output summary](#runtime-and-output-summary-3)
+    - [StarDist](#stardist-1)
+      - [Experiment status](#experiment-status-5)
+      - [Evaluation results](#evaluation-results-5)
+      - [Interpretation](#interpretation-3)
+      - [Configuration](#configuration-4)
+      - [Runtime and output summary](#runtime-and-output-summary-4)
+    - [Watershed baseline](#watershed-baseline-1)
+      - [Experiment status](#experiment-status-6)
+      - [Configuration](#configuration-5)
+      - [Evaluation results](#evaluation-results-6)
+      - [Runtime and output summary](#runtime-and-output-summary-5)
+      - [Follow-up hypotheses](#follow-up-hypotheses-1)
+    - [Ensemble](#ensemble-1)
+      - [Experiment status](#experiment-status-7)
+      - [Evaluation results](#evaluation-results-7)
+      - [Interpretation](#interpretation-4)
+
 ## Fluo-N2DL-HeLa
 
 ### Overall comparison
 
 | Sequence | Method | DET | SEG | TRA | `OP_CTB` |
 | --- | --- | ---: | ---: | ---: | ---: |
-| 01 | Watershed | 0.675113 | 0.463852 | 0.670664 | 0.567258 |
+| 01 | Cellpose | 0.936625 | 0.779104 | 0.933606 | 0.856355 |
 | 01 | StarDist | 0.897604 | 0.701001 | 0.894289 | 0.797645 |
-| 01 | Cellpose | **0.936625** | **0.779104** | **0.933606** | **0.856355** |
-| 02 | Watershed | 0.768702 | 0.582872 | 0.762708 | 0.672790 |
+| 01 | Watershed | 0.675113 | 0.463852 | 0.670664 | 0.567258 |
+| 01 | Ensemble | **0.944415** | **0.794855** | **0.941088** | **0.867971** |
+| 02 | Cellpose | 0.967124 | 0.838270 | 0.964671 | 0.901470 |
 | 02 | StarDist | 0.923068 | 0.816860 | 0.919480 | 0.868170 |
-| 02 | Cellpose | **0.967124** | **0.838270** | **0.964671** | **0.901470** |
+| 02 | Watershed | 0.768702 | 0.582872 | 0.762708 | 0.672790 |
+| 02 | Ensemble | **0.969957** | **0.846924** | **0.967633** | **0.907279** |
 
-Cellpose is the strongest completed project input on both sequences. Relative
-to the watershed baseline, its CTB is higher by 0.289097 on sequence 01 and
-0.228680 on sequence 02. The reduction in false negatives and missing temporal
-edges is consistent with the large improvements in DET and TRA. Sequence 02
-still has many false-positive operations, so qualitative review remains
-important even though its aggregate scores are high.
+The ensemble is the strongest completed result on both sequences, while
+Cellpose remains the strongest single segmentation input. Relative to
+Cellpose, the ensemble improves CTB by 0.011617 on sequence 01 and 0.005809 on
+sequence 02. Its CTB improvement over the watershed baseline is 0.300713 and
+0.234489, respectively. The ensemble gains are positive but much smaller than
+the improvement from watershed to either learned segmentation method.
 
 Compared with StarDist, Cellpose improves CTB by 0.058710 on sequence 01 and
 0.033300 on sequence 02. The largest Cellpose-to-StarDist metric gain is SEG
@@ -37,13 +89,16 @@ on sequence 01, at 0.078103. On sequence 02 their SEG scores differ by only
 The relationship with the published benchmarks differs by input method. The
 watershed baseline is below every matching published SEG, TRA, and CTB value;
 StarDist is close to but below its published rows; and Cellpose exceeds its
-published rows on both sequences. This pattern shows that the segmentation
-input and its preprocessing materially affect the final Ultrack result. It
-does not identify one dependency or parameter as the cause, because the three
-workflows were not run under identical software and hardware conditions.
+published rows on both sequences. The ensemble exceeds the published SEG and
+CTB values on both sequences; its TRA is 0.014912 below the published sequence
+01 value and 0.011633 above the published sequence 02 value. This pattern
+shows that the segmentation input and its preprocessing materially affect the
+final Ultrack result. It does not identify one dependency or parameter as the
+cause, because the workflows were not run under identical software and
+hardware conditions.
 
 StarDist produced the number of unique track identities closest to the
-ground-truth lineage count on both sequences, but Cellpose still achieved the
+ground-truth lineage count on both sequences, but the ensemble achieved the
 best DET, SEG, TRA, and CTB scores. Track-count similarity alone is therefore
 not evidence of better tracking; the locations, temporal links, and lineage
 structure also matter.
@@ -221,7 +276,7 @@ comparison with Cellpose or watershed.
 
 Additional execution metadata, resolved Ultrack defaults, and output layout
 are recorded in the
-[StarDist reproducibility section](ultrack-reproducibility.md#fluo-n2dl-hela-stardist-input).
+[StarDist reproducibility section](ultrack-reproducibility.md#fluo-n2dl-hela).
 
 ### Watershed baseline
 
@@ -347,8 +402,103 @@ evaluation:
 4. Preserve these outputs as the untuned baseline. If watershed is tuned, use
    sequence 01 for development and retain sequence 02 as a less-biased
    comparison rather than repeatedly optimizing both against their scores.
-5. Complete the planned ensemble experiment before deciding whether a larger
-   watershed parameter study is worth the compute time.
+5. Inspect whether the completed ensemble corrects watershed errors or merely
+   suppresses their effect through the stronger learned-model inputs before
+   deciding whether a larger watershed parameter study is worth the compute
+   time.
+
+### Ensemble
+
+#### Experiment status
+
+Both public training sequences were processed with an ensemble of the saved
+Cellpose, StarDist, and watershed labels. The ensemble combines binary
+foreground maps with logical OR and averages the three contour maps before
+running Ultrack. Both CTC result directories passed `py-ctcmetrics` validation
+and were evaluated on 2026-10-27.
+
+#### Evaluation results
+
+| Sequence | Metric | Published | Reproduced | Difference |
+| --- | --- | ---: | ---: | ---: |
+| 01 | DET | Not reported | 0.944415 | Not applicable |
+| 01 | SEG | 0.740 | 0.794855 | +0.054855 |
+| 01 | TRA | 0.956 | 0.941088 | -0.014912 |
+| 01 | `OP_CTB` | 0.848 | 0.867971 | +0.019971 |
+| 02 | DET | Not reported | 0.969957 | Not applicable |
+| 02 | SEG | 0.826 | 0.846924 | +0.020924 |
+| 02 | TRA | 0.956 | 0.967633 | +0.011633 |
+| 02 | `OP_CTB` | 0.891 | 0.907279 | +0.016279 |
+
+The matching published values are the HeLa ensemble rows from Table 3 of the
+[ECCV 2024 Ultrack paper](https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/10114.pdf).
+The project ensemble exceeds the published SEG and CTB values for both
+sequences. Its sequence 01 TRA is slightly below the published value, while
+its sequence 02 TRA is above it.
+
+The reports are stored outside Git at:
+
+```text
+<ULTRACK_RUN_ROOT>/hela-seq01-full-ensemble/evaluation/01_RES/
+<ULTRACK_RUN_ROOT>/hela-seq02-full-ensemble/evaluation/02_RES/
+```
+
+Selected tracking-error diagnostics are:
+
+| Sequence | Node splits | False negatives | False positives | Edges deleted | Edges added | Edges changed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 01 | 29 | 378 | 877 | 5 | 632 | 91 |
+| 02 | 117 | 312 | 3,932 | 26 | 1,051 | 210 |
+
+#### Interpretation
+
+The ensemble improves every aggregate metric over Cellpose, the strongest
+single method, but the gains are modest. On sequence 01 it reduces false
+negatives and missing temporal edges relative to Cellpose while increasing
+false positives. Sequence 02 shows the same tradeoff: fewer false negatives
+and edges added, but slightly more false positives. The net effect is a small
+improvement in DET, TRA, and CTB on both sequences.
+
+#### Configuration
+
+| Item | Recorded value |
+| --- | --- |
+| Component methods | Cellpose, StarDist, and watershed |
+| Foreground combination | Logical OR |
+| Contour combination | Arithmetic mean |
+| Label-to-contour sigma | 4 pixels |
+| NumPy | 2.5.4 |
+| tifffile | 2026.9.20 |
+| Ultrack | 0.8.0 |
+| Segmentation inference | Reused saved labels; models were not rerun |
+| Worker settings and hardware | Not captured in the supplied run reports |
+
+The component-label summaries are:
+
+| Component | Sequence 01 mean (range) | Sequence 02 mean (range) |
+| --- | ---: | ---: |
+| Cellpose | 96.8 (41--154) | 315.4 (146--411) |
+| StarDist | 93.2 (38--149) | 288.9 (131--387) |
+| Watershed | 94.5 (36--164) | 294.3 (143--388) |
+
+#### Runtime and output summary
+
+| Item | Sequence 01 | Sequence 02 |
+| --- | ---: | ---: |
+| Total recorded pipeline runtime | 502.6 seconds | 549.2 seconds |
+| Ensemble input conversion | 37.1 seconds | 51.4 seconds |
+| Ultrack hypothesis generation | 355.3 seconds | 346.5 seconds |
+| Ultrack linking | 95.0 seconds | 99.1 seconds |
+| Ultrack solving | 15.2 seconds | 52.2 seconds |
+| Mean selected Ultrack objects per frame | 99.0 | 314.4 |
+| Unique predicted tracks | 321 | 957 |
+| Lineage entries | 80 | 312 |
+| Ground-truth lineage records | 265 | 674 |
+
+The workflows took approximately 8.4 and 9.2 minutes. Their selected-object
+counts are close to the corresponding Cellpose runs, which is consistent with
+the ensemble providing a modest refinement rather than radically changing the
+number of accepted objects.
 
 ## Fluo-N2DH-GOWT1
 
@@ -356,12 +506,14 @@ evaluation:
 
 | Sequence | Method | DET | SEG | TRA | `OP_CTB` |
 | --- | --- | ---: | ---: | ---: | ---: |
-| 01 | Watershed | 0.097911 | 0.075761 | 0.112959 | 0.094360 |
-| 01 | StarDist | 0.943683 | 0.769468 | 0.944420 | 0.856944 |
 | 01 | Cellpose | **0.956608** | **0.850406** | **0.956903** | **0.903654** |
-| 02 | Watershed | 0.076003 | 0.163528 | 0.093791 | 0.128659 |
+| 01 | StarDist | 0.943683 | 0.769468 | 0.944420 | 0.856944 |
+| 01 | Watershed | 0.097911 | 0.075761 | 0.112959 | 0.094360 |
+| 01 | Ensemble | 0.712391 | 0.702726 | 0.721126 | 0.711926 |
 | 02 | Cellpose | 0.849424 | **0.853874** | 0.849609 | 0.851741 |
 | 02 | StarDist | **0.875566** | 0.844489 | **0.875649** | **0.860069** |
+| 02 | Watershed | 0.076003 | 0.163528 | 0.093791 | 0.128659 |
+| 02 | Ensemble | 0.718673 | 0.648553 | 0.725760 | 0.687157 |
 
 Cellpose improves CTB over watershed by 0.809294 on sequence 01 and 0.723082
 on sequence 02. Cellpose is strongest on all four sequence 01 metrics. On
@@ -370,6 +522,13 @@ the highest DET, TRA, and CTB scores. StarDist's sequence 02 CTB exceeds
 Cellpose by 0.008328. These small differences should be considered together
 with the planned overlay movies rather than treated as decisive from aggregate
 scores alone.
+
+Unlike the HeLa result, the GOWT1 ensemble underperforms both learned single
+methods. Its CTB is 0.191728 below Cellpose on sequence 01 and 0.172912 below
+StarDist on sequence 02. It remains substantially better than the watershed
+baseline, but combining all three inputs does not improve the best available
+result for this dataset. A likely explanation is error carry-over from one of
+the component methods rather than a failure shared by Cellpose and StarDist.
 
 The watershed input contains approximately 2.4 times as many labels per frame
 as Cellpose for sequence 01 and 3.0 times as many for sequence 02. It also
@@ -639,3 +798,103 @@ minutes, respectively.
    sequence 02 as a less-biased evaluation sequence.
 4. Keep the current outputs as the documented untuned baseline rather than
    overwriting them.
+
+### Ensemble
+
+#### Experiment status
+
+Both public training sequences were processed with the saved Cellpose,
+StarDist, and watershed labels. Binary foreground maps were combined with
+logical OR and the three contour maps were averaged before running Ultrack.
+Both CTC result directories passed `py-ctcmetrics` validation and were
+evaluated on 2026-10-27.
+
+The ECCV 2024 Ultrack paper does not report a matching GOWT1 experiment, so
+these values are project results rather than a published-benchmark
+reproduction.
+
+#### Evaluation results
+
+| Sequence | DET | SEG | TRA | `OP_CTB` |
+| --- | ---: | ---: | ---: | ---: |
+| 01 | 0.712391 | 0.702726 | 0.721126 | 0.711926 |
+| 02 | 0.718673 | 0.648553 | 0.725760 | 0.687157 |
+
+The reports are stored outside Git at:
+
+```text
+<ULTRACK_RUN_ROOT>/gowt1-seq01-full-ensemble/evaluation/01_RES/
+<ULTRACK_RUN_ROOT>/gowt1-seq02-full-ensemble/evaluation/02_RES/
+```
+
+Selected tracking-error diagnostics are:
+
+| Sequence | Node splits | False negatives | False positives | Edges deleted | Edges added | Edges changed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 01 | 0 | 384 | 2,079 | 0 | 445 | 4 |
+| 02 | 0 | 489 | 2,191 | 1 | 557 | 2 |
+
+#### Interpretation
+
+The ensemble has far more false positives than either Cellpose or StarDist:
+2,079 and 2,191 across the two sequences, compared with 133 and 210 for
+Cellpose and 239 and 312 for StarDist. It also has more false negatives and
+missing temporal edges than the best single method on each sequence.
+
+The ensemble's logical-OR foreground retains a region whenever any component
+method predicts it. Errors from one failed input can therefore carry into the
+ensemble even when the other two methods reject that region. The GOWT1
+watershed run is the leading candidate because it is severely oversegmented
+and has thousands of false positives, but the current aggregate metrics do not
+prove that it caused each ensemble error. Contour averaging provides a second
+possible carry-over path because a poor boundary map can weaken agreement
+between the two stronger inputs.
+
+The clearest diagnostic is a leave-one-out ensemble containing only Cellpose
+and StarDist. If its scores recover toward the two single-method results, that
+would support the watershed carry-over hypothesis. The overlay movies should
+also distinguish regions unique to each component foreground so the source of
+the extra detections can be inspected directly.
+
+#### Configuration
+
+| Item | Recorded value |
+| --- | --- |
+| Component methods | Cellpose, StarDist, and watershed |
+| Foreground combination | Logical OR |
+| Contour combination | Arithmetic mean |
+| Label-to-contour sigma | 4 pixels |
+| NumPy | 2.5.4 |
+| tifffile | 2026.9.20 |
+| Ultrack | 0.8.0 |
+| Segmentation inference | Reused saved labels; models were not rerun |
+| Worker settings and hardware | Not captured in the supplied run reports |
+
+The component-label summaries make the watershed discrepancy visible before
+Ultrack is run:
+
+| Component | Sequence 01 mean (range) | Sequence 02 mean (range) |
+| --- | ---: | ---: |
+| Cellpose | 22.7 (21--25) | 25.1 (22--31) |
+| StarDist | 24.2 (21--32) | 28.8 (22--40) |
+| Watershed | 54.8 (19--82) | 76.4 (47--112) |
+
+#### Runtime and output summary
+
+| Item | Sequence 01 | Sequence 02 |
+| --- | ---: | ---: |
+| Total recorded pipeline runtime | 695.3 seconds | 476.6 seconds |
+| Ensemble input conversion | 97.2 seconds | 127.3 seconds |
+| Ultrack hypothesis generation | 397.5 seconds | 235.4 seconds |
+| Ultrack linking | 185.2 seconds | 98.5 seconds |
+| Ultrack solving | 15.4 seconds | 15.3 seconds |
+| Mean selected Ultrack objects per frame | 40.8 | 45.9 |
+| Unique predicted tracks | 366 | 437 |
+| Lineage entries | 144 | 196 |
+| Ground-truth lineage records | 28 | 58 |
+
+The workflows took approximately 11.6 and 7.9 minutes. The ensemble selects
+substantially more objects per frame than either learned input and produces
+366 and 437 track identities, compared with 46 and 67 for Cellpose and 68 and
+106 for StarDist. This run-level evidence strengthens, but does not by itself
+prove, the watershed error carry-over hypothesis.
