@@ -1,0 +1,26 @@
+method: embedtrack
+method_repo: https://github.com/kaloeffler/EmbedTrack
+method_commit: 510bc748230056e50fb8078281d76533f41a1d64
+paper: Loeffler and Mikut, EmbedTrack (IEEE Access 2022; IEEE 9834915; arXiv 2204.10713)
+dataset: Fluo-N2DL-HeLa
+sequences: ["01", "02"]            # CTC training sequences (GT public)
+dataset_archive_sha256: 35dd99d58e071aba0b03880128d920bd1c063783cc280f9531fbdc5be614c82e   # same Fluo-N2DL-HeLa.zip as ../20261020_embedtrack_Fluo-N2DL-HeLa_pretrained-kit-loe-ge/
+model: pretrained KIT-Loe-GE model for Fluo-N2DH-GOWT1 (cross-dataset test: model trained on a different cell type)
+model_archive_sha256: 0abfa648355fca0380fa6e02aeced3275d0b32de26093ff54f23e9b559fdf89e
+model_file: KIT-Loe-GE/models/Fluo-N2DH-GOWT1/best_iou_model.pth
+environment: environments/embedtrack.yaml, plus compatibility patches (diffs in ../20261020_embedtrack_Fluo-N2DH-GOWT1_pretrained-kit-loe-ge/)
+command: sbatch --exclude=k003 jobs/embedtrack_run_pretrained.sh Fluo-N2DL-HeLa Fluo-N2DH-GOWT1    # batch_size 32
+seed: null                          # inference only
+cluster_job_id: 2259162
+hardware: 1x NVIDIA A40 (node g008), 8 CPUs, 32G requested
+runtime: "00:22:40"
+peak_memory: MaxRSS 2219560K
+raw_output_location: /home/slwhitney/clinic-2026-cell-tracking/external/EmbedTrack/results/Fluo-N2DL-HeLa/KIT-Loe-GE_model-Fluo-N2DH-GOWT1/train/{01_RES,02_RES}   # not in git; to be moved to the shared project directory
+evaluation_command: CTC EvaluationSoftware (Mac build) {SEG,TRA,DET}Measure <dir containing NN_GT and NN_RES> <seq> 3
+notes: >
+  Cross-dataset negative control: the model trained on Fluo-N2DH-GOWT1 applied to
+  Fluo-N2DL-HeLa. EmbedTrack models are trained per dataset, so a large drop is
+  expected. There is no published score for this combination. EmbedTrack refuses a
+  model path that does not contain the dataset name, so the model was reached through
+  a symlink named Fluo-N2DL-HeLa_with_Fluo-N2DH-GOWT1 (same weights and config).
+  Scored on training sequences 01/02 with the Mac build of the CTC scorers.
