@@ -158,3 +158,77 @@ image shape. Use `--frame-start` and `--frame-stop` for a subset check. A full
 run writes `01_RES` or `02_RES`, while a subset writes `subset_RES`. GOWT1
 ensemble results are additional project experiments because the selected
 Ultrack paper does not report a matching GOWT1 benchmark.
+
+## CTC overlay movie
+
+[`ultrack/render_ctc_overlay.py`](ultrack/render_ctc_overlay.py) creates a
+two-panel animated GIF for qualitative review of a 2D CTC result. The left
+panel overlays ground-truth boundaries in green and prediction boundaries in
+magenta. The right panel shows overlapping foreground in green,
+prediction-only pixels in red, and ground-truth-only pixels in cyan. It also
+reports per-frame instance matches using a configurable intersection-over-union
+threshold.
+
+Use `TRA` masks for a continuous tracking movie. Ground-truth and prediction
+track IDs can be added for a small crop with `--show-track-ids`. Use `SEG` for
+segmentation-specific review, noting that CTC segmentation annotations may be
+available for only a subset of frames.
+
+```bash
+export CTC_ROOT=<PROJECT_DATA_ROOT>
+export ULTRACK_RUN_ROOT=<PROJECT_DATA_ROOT>/runs/ultrack
+export PYTHONPATH="$PWD/src"
+
+python scripts/ultrack/render_ctc_overlay.py \
+    --raw-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01" \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01_GT" \
+    --result-dir "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/01_RES" \
+    --ground-truth-source TRA \
+    --output-path \
+        "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_overlay.gif" \
+    --fps 4 \
+    --scale 0.5
+```
+
+For a segmentation-focused GIF, select the sparse `SEG` annotations and skip
+frames that do not have a segmentation mask:
+
+```bash
+python scripts/ultrack/render_ctc_overlay.py \
+    --raw-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01" \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01_GT" \
+    --result-dir "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/01_RES" \
+    --ground-truth-source SEG \
+    --only-annotated \
+    --output-path \
+        "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_SEG_overlay.gif" \
+    --fps 1 \
+    --scale 0.5
+```
+
+For track IDs, first choose a crop containing a manageable number of cells:
+
+```bash
+python scripts/ultrack/render_ctc_overlay.py \
+    --raw-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01" \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01_GT" \
+    --result-dir "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/01_RES" \
+    --ground-truth-source TRA \
+    --output-path \
+        "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_crop.gif" \
+    --crop 100 500 200 700 \
+    --show-track-ids \
+    --max-track-labels 30 \
+    --fps 4 \
+    --scale 1
+```
+
+If an MP4 is easier to use in the presentation, convert the GIF with FFmpeg:
+
+```bash
+ffmpeg -y \
+    -i "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_overlay.gif" \
+    -movflags +faststart \
+    -pix_fmt yuv420p \
+    "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_overlay.mp4"
+```
