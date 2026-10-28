@@ -12,9 +12,7 @@ from pathlib import Path
 import numpy as np
 import tifffile
 
-MATCH_FRACTION = (
-    0.5
-)
+MATCH_FRACTION = 0.5
 
 
 def jaccard_scores(ref, res):
