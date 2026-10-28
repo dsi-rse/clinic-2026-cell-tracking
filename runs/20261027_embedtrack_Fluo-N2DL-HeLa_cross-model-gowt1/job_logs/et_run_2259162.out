@@ -1,0 +1,215 @@
+start: Tue Oct 27 06:22:38 PM CDT 2026  host: g008  data: Fluo-N2DL-HeLa  model: Fluo-N2DH-GOWT1  sequences: 01 02
+Tue Oct 27 18:22:38 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.84                 Driver Version: 595.84         CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A40                     On  |   00000000:81:00.0 Off |                    0 |
+|  0%   28C    P8             21W /  300W |       0MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+`model_dict` dictionary successfully created with: 
+ -- num of classes equal to [4, 1, 2], 
+ -- input channels equal to 1, 
+ -- name equal to 2d
+Creating branched erfnet with [4, 1, 2] classes
+Save tracking mask t091.tif
+Save tracking mask t090.tif
+Save tracking mask t089.tif
+Save tracking mask t088.tif
+Save tracking mask t087.tif
+Save tracking mask t086.tif
+Save tracking mask t085.tif
+Save tracking mask t084.tif
+Save tracking mask t083.tif
+Save tracking mask t082.tif
+Save tracking mask t081.tif
+Save tracking mask t080.tif
+Save tracking mask t079.tif
+Save tracking mask t078.tif
+Save tracking mask t077.tif
+Save tracking mask t076.tif
+Save tracking mask t075.tif
+Save tracking mask t074.tif
+Save tracking mask t073.tif
+Save tracking mask t072.tif
+Save tracking mask t071.tif
+Save tracking mask t070.tif
+Save tracking mask t069.tif
+Save tracking mask t068.tif
+Save tracking mask t067.tif
+Save tracking mask t066.tif
+Save tracking mask t065.tif
+Save tracking mask t064.tif
+Save tracking mask t063.tif
+Save tracking mask t062.tif
+Save tracking mask t061.tif
+Save tracking mask t060.tif
+Save tracking mask t059.tif
+Save tracking mask t058.tif
+Save tracking mask t057.tif
+Save tracking mask t056.tif
+Save tracking mask t055.tif
+Save tracking mask t054.tif
+Save tracking mask t053.tif
+Save tracking mask t052.tif
+Save tracking mask t051.tif
+Save tracking mask t050.tif
+Save tracking mask t049.tif
+Save tracking mask t048.tif
+Save tracking mask t047.tif
+Save tracking mask t046.tif
+Save tracking mask t045.tif
+Save tracking mask t044.tif
+Save tracking mask t043.tif
+Save tracking mask t042.tif
+Save tracking mask t041.tif
+Save tracking mask t040.tif
+Save tracking mask t039.tif
+Save tracking mask t038.tif
+Save tracking mask t037.tif
+Save tracking mask t036.tif
+Save tracking mask t035.tif
+Save tracking mask t034.tif
+Save tracking mask t033.tif
+Save tracking mask t032.tif
+Save tracking mask t031.tif
+Save tracking mask t030.tif
+Save tracking mask t029.tif
+Save tracking mask t028.tif
+Save tracking mask t027.tif
+Save tracking mask t026.tif
+Save tracking mask t025.tif
+Save tracking mask t024.tif
+Save tracking mask t023.tif
+Save tracking mask t022.tif
+Save tracking mask t021.tif
+Save tracking mask t020.tif
+Save tracking mask t019.tif
+Save tracking mask t018.tif
+Save tracking mask t017.tif
+Save tracking mask t016.tif
+Save tracking mask t015.tif
+Save tracking mask t014.tif
+Save tracking mask t013.tif
+Save tracking mask t012.tif
+Save tracking mask t011.tif
+Save tracking mask t010.tif
+Save tracking mask t009.tif
+Save tracking mask t008.tif
+Save tracking mask t007.tif
+Save tracking mask t006.tif
+Save tracking mask t005.tif
+Save tracking mask t004.tif
+Save tracking mask t003.tif
+Save tracking mask t002.tif
+Save tracking mask t001.tif
+Save tracking mask t000.tif
+Fluo-N2DL-HeLa 01 (model Fluo-N2DH-GOWT1): 501 s
+results: results/Fluo-N2DL-HeLa/KIT-Loe-GE_model-Fluo-N2DH-GOWT1/train/01_RES
+`model_dict` dictionary successfully created with: 
+ -- num of classes equal to [4, 1, 2], 
+ -- input channels equal to 1, 
+ -- name equal to 2d
+Creating branched erfnet with [4, 1, 2] classes
+Save tracking mask t091.tif
+Save tracking mask t090.tif
+Save tracking mask t089.tif
+Save tracking mask t088.tif
+Save tracking mask t087.tif
+Save tracking mask t086.tif
+Save tracking mask t085.tif
+Save tracking mask t084.tif
+Save tracking mask t083.tif
+Save tracking mask t082.tif
+Save tracking mask t081.tif
+Save tracking mask t080.tif
+Save tracking mask t079.tif
+Save tracking mask t078.tif
+Save tracking mask t077.tif
+Save tracking mask t076.tif
+Save tracking mask t075.tif
+Save tracking mask t074.tif
+Save tracking mask t073.tif
+Save tracking mask t072.tif
+Save tracking mask t071.tif
+Save tracking mask t070.tif
+Save tracking mask t069.tif
+Save tracking mask t068.tif
+Save tracking mask t067.tif
+Save tracking mask t066.tif
+Save tracking mask t065.tif
+Save tracking mask t064.tif
+Save tracking mask t063.tif
+Save tracking mask t062.tif
+Save tracking mask t061.tif
+Save tracking mask t060.tif
+Save tracking mask t059.tif
+Save tracking mask t058.tif
+Save tracking mask t057.tif
+Save tracking mask t056.tif
+Save tracking mask t055.tif
+Save tracking mask t054.tif
+Save tracking mask t053.tif
+Save tracking mask t052.tif
+Save tracking mask t051.tif
+Save tracking mask t050.tif
+Save tracking mask t049.tif
+Save tracking mask t048.tif
+Save tracking mask t047.tif
+Save tracking mask t046.tif
+Save tracking mask t045.tif
+Save tracking mask t044.tif
+Save tracking mask t043.tif
+Save tracking mask t042.tif
+Save tracking mask t041.tif
+Save tracking mask t040.tif
+Save tracking mask t039.tif
+Save tracking mask t038.tif
+Save tracking mask t037.tif
+Save tracking mask t036.tif
+Save tracking mask t035.tif
+Save tracking mask t034.tif
+Save tracking mask t033.tif
+Save tracking mask t032.tif
+Save tracking mask t031.tif
+Save tracking mask t030.tif
+Save tracking mask t029.tif
+Save tracking mask t028.tif
+Save tracking mask t027.tif
+Save tracking mask t026.tif
+Save tracking mask t025.tif
+Save tracking mask t024.tif
+Save tracking mask t023.tif
+Save tracking mask t022.tif
+Save tracking mask t021.tif
+Save tracking mask t020.tif
+Save tracking mask t019.tif
+Save tracking mask t018.tif
+Save tracking mask t017.tif
+Save tracking mask t016.tif
+Save tracking mask t015.tif
+Save tracking mask t014.tif
+Save tracking mask t013.tif
+Save tracking mask t012.tif
+Save tracking mask t011.tif
+Save tracking mask t010.tif
+Save tracking mask t009.tif
+Save tracking mask t008.tif
+Save tracking mask t007.tif
+Save tracking mask t006.tif
+Save tracking mask t005.tif
+Save tracking mask t004.tif
+Save tracking mask t003.tif
+Save tracking mask t002.tif
+Save tracking mask t001.tif
+Save tracking mask t000.tif
+Fluo-N2DL-HeLa 02 (model Fluo-N2DH-GOWT1): 851 s
+results: results/Fluo-N2DL-HeLa/KIT-Loe-GE_model-Fluo-N2DH-GOWT1/train/02_RES
+end: Tue Oct 27 06:45:18 PM CDT 2026  exit status: 0
