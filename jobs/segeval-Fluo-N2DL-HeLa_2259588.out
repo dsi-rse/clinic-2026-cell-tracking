@@ -1,0 +1,21 @@
+01_RES_Fluo-N2DL-HeLa_GT+ST_model_0.35_0.07: wrote 8655 objects to /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa/01_RES
+Evaluate sequence:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa/01_RES  with ground truth:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DL-HeLa/01_GTwith results:  {'DET': 0.9844773700659799, 'SEG': 0.8557989791593482, 'OP_CSB': 0.920138174612664}  done!
+DET: 0.98448
+SEG: 0.8558
+OP_CSB: 0.92014
+02_RES_Fluo-N2DL-HeLa_GT+ST_model_0.35_0.07: wrote 26314 objects to /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa/02_RES
+Evaluate sequence:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa/02_RES  with ground truth:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DL-HeLa/02_GTwith results:  {'DET': 0.9892250196695516, 'SEG': 0.8867428521106633, 'OP_CSB': 0.9379839358901074}  done!
+DET: 0.98923
+SEG: 0.88674
+OP_CSB: 0.93798
+
+== Fluo-N2DL-HeLa segmentation (OP_CSB = 0.5*(DET+SEG)) ==
+  (no SEG/DET/TRA columns in /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa_01_SEG_DET.csv; columns are: ['DET;SEG;OP_CSB'])
+  01: 
+  (no SEG/DET/TRA columns in /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa_02_SEG_DET.csv; columns are: ['DET;SEG;OP_CSB'])
+  02: 
+
+== Fluo-N2DL-HeLa tracking (OP_CTB = 0.5*(SEG+TRA)) ==
+  01: missing /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa_01_tracking_metrics.csv
+  02: missing /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa_02_tracking_metrics.csv
+Done

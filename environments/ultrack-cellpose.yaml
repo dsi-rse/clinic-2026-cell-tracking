@@ -1,0 +1,13 @@
+name: cell-tracking-ultrack-cellpose
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.12
+  - pip
+  - "numpy>=2.0,<2.1"
+  - "pyqt>=5.15.9,<6"
+  - pip:
+      - ultrack==0.8.0
+      - cellpose==3.1.1.3

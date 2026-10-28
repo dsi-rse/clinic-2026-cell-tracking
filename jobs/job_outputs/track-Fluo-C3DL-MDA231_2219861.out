@@ -1,0 +1,230 @@
+===== Fluo-C3DL-MDA231 01: tracking =====
+####################
+time point: 0
+####################
+####################
+time point: 1
+####################
+####################
+time point: 2
+####################
+####################
+time point: 3
+####################
+Add vertices to graph
+Add sink and source vertex to graph
+Set up constraints
+Add Equations
+Optimize
+Optimal objective: 456.676
+####################
+time point: 4
+####################
+####################
+time point: 5
+####################
+####################
+time point: 6
+####################
+Add vertices to graph
+Add sink and source vertex to graph
+Set up constraints
+Add Equations
+Optimize
+Optimal objective: 1249.19
+####################
+time point: 7
+####################
+####################
+time point: 8
+####################
+####################
+time point: 9
+####################
+Add vertices to graph
+Add sink and source vertex to graph
+Set up constraints
+Add Equations
+Optimize
+Optimal objective: 1306.36
+####################
+time point: 10
+####################
+####################
+time point: 11
+####################
+Add vertices to graph
+Add sink and source vertex to graph
+Set up constraints
+Add Equations
+Optimize
+Optimal objective: 1070.79
+untangle
+detangling - set up equations
+detangling - solve optim problem
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2874691
+Academic license 2874691 - for non-commercial use only - registered to ev___@uchicago.edu
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (linux64 - "Ubuntu 24.04.4 LTS")
+
+CPU model: Intel(R) Xeon(R) Gold 5418Y, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 48 physical cores, 96 logical processors, using up to 32 threads
+
+Academic license 2874691 - for non-commercial use only - registered to ev___@uchicago.edu
+Optimize a model with 407 rows, 248 columns and 1312 nonzeros
+Model fingerprint: 0x3b7cf8f3
+Variable types: 0 continuous, 248 integer (165 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+05]
+  Objective range  [1e+00, 1e+01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 3e+00]
+Found heuristic solution: objective 215.0000000
+Found heuristic solution: objective 71.0000000
+Presolve removed 373 rows and 209 columns
+Presolve time: 0.01s
+Presolved: 34 rows, 39 columns, 109 nonzeros
+Found heuristic solution: objective 45.0000000
+Variable types: 0 continuous, 39 integer (27 binary)
+
+Root relaxation: objective 3.918750e+01, 7 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   39.18750    0    2   45.00000   39.18750  12.9%     -    0s
+H    0     0                      41.0000000   39.18750  4.42%     -    0s
+     0     0   39.18750    0    2   41.00000   39.18750  4.42%     -    0s
+
+Explored 1 nodes (7 simplex iterations) in 0.01 seconds (0.00 work units)
+Thread count was 32 (of 96 available processors)
+
+Solution count 4: 41 45 71 215 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 4.100000000000e+01, best bound 4.100000000000e+01, gap 0.0000%
+Optimal objective: 41
+{'s_53': 1, 'm_40_41': 1, 'm_47_48': 1, 's_70': 1, 'e_11_39': 1, 'm_34_35': 1, 'm_18_19': 1, 's_33': 1, 'm_49_50': 1, 'e_45_55': 1, 'm_65_66': 1, 's_61': 1, 's_68': 1, 's_67': 1, 's_75': 1}
+add dummy masks
+export masks
+===== Fluo-C3DL-MDA231 02: tracking =====
+####################
+time point: 0
+####################
+####################
+time point: 1
+####################
+####################
+time point: 2
+####################
+####################
+time point: 3
+####################
+Add vertices to graph
+Add sink and source vertex to graph
+Set up constraints
+Add Equations
+Optimize
+Optimal objective: 1557.03
+####################
+time point: 4
+####################
+####################
+time point: 5
+####################
+####################
+time point: 6
+####################
+Add vertices to graph
+Add sink and source vertex to graph
+Set up constraints
+Add Equations
+Optimize
+Optimal objective: 3435.25
+####################
+time point: 7
+####################
+####################
+time point: 8
+####################
+####################
+time point: 9
+####################
+Add vertices to graph
+Add sink and source vertex to graph
+Set up constraints
+Add Equations
+Optimize
+Optimal objective: 3062.89
+####################
+time point: 10
+####################
+####################
+time point: 11
+####################
+Add vertices to graph
+Add sink and source vertex to graph
+Set up constraints
+Add Equations
+Optimize
+Optimal objective: 2552.97
+untangle
+detangling - set up equations
+detangling - solve optim problem
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2874691
+Academic license 2874691 - for non-commercial use only - registered to ev___@uchicago.edu
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (linux64 - "Ubuntu 24.04.4 LTS")
+
+CPU model: Intel(R) Xeon(R) Gold 5418Y, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 48 physical cores, 96 logical processors, using up to 32 threads
+
+Academic license 2874691 - for non-commercial use only - registered to ev___@uchicago.edu
+Optimize a model with 2214 rows, 1153 columns and 7273 nonzeros
+Model fingerprint: 0xa1ef9c3b
+Variable types: 0 continuous, 1153 integer (795 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+05]
+  Objective range  [1e+00, 1e+01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Found heuristic solution: objective 578.0000000
+Presolve removed 2084 rows and 1009 columns
+Presolve time: 0.04s
+Presolved: 130 rows, 144 columns, 460 nonzeros
+Found heuristic solution: objective 271.0000000
+Variable types: 0 continuous, 144 integer (101 binary)
+
+Root relaxation: objective 2.342001e+02, 27 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0  234.20006    0   12  271.00000  234.20006  13.6%     -    0s
+H    0     0                     245.0000000  234.20006  4.41%     -    0s
+*    0     0               0     244.0000000  244.00000  0.00%     -    0s
+
+Cutting planes:
+  Learned: 1
+  Gomory: 7
+  Cover: 8
+  Implied bound: 10
+  MIR: 4
+  StrongCG: 2
+  Flow cover: 28
+  Relax-and-lift: 2
+
+Explored 1 nodes (41 simplex iterations) in 0.05 seconds (0.01 work units)
+Thread count was 32 (of 96 available processors)
+
+Solution count 4: 244 245 271 578 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 2.440000000000e+02, best bound 2.440000000000e+02, gap 0.0000%
+Optimal objective: 244
+{'m_84_85': 1, 's_71': 1, 'm_291_292': 1, 'm_103_118': 1, 's_72': 1, 's_284': 2, 'm_8_9': 1, 'm_10_122': 1, 'm_271_272': 1, 'm_13_23': 1, 's_92': 1, 's_94': 1, 'm_18_81': 1, 'm_24_80': 1, 'm_127_128': 1, 'm_236_237': 1, 'm_32_33': 1, 's_302': 1, 'm_108_109': 1, 'm_196_197': 1, 'm_167_168': 1, 's_152': 1, 'm_43_46': 1, 'm_75_120': 1, 's_227': 1, 's_201': 1, 'm_49_54': 1, 'm_52_79': 1, 'm_137_138': 1, 'm_119_135': 1, 's_174': 1, 'm_63_99': 1, 'm_64_65': 1, 'm_69_70': 1, 's_172': 1, 'm_110_111': 1, 's_149': 1, 's_148': 1, 'm_143_144': 1, 'm_123_124': 1, 's_170': 1, 'm_213_214_215': 1, 'm_179_180': 1, 'e_105_113': 1, 'm_189_190_191': 1, 's_258': 1, 'm_165_166': 1, 's_327': 1, 'm_121_157': 1, 'm_161_162': 1, 'm_187_188': 1, 'm_192_193': 1, 's_147': 1, 'm_216_217': 1, 's_203': 1, 's_169': 1, 'm_273_274': 1, 'e_154_173': 1, 's_306': 1, 'm_171_178': 1, 's_228': 1, 's_221': 1, 'm_238_239': 1, 's_223': 1, 's_286': 1, 'm_199_234': 1, 's_287': 1, 'm_244_245_246': 1, 'm_253_255': 1, 's_229': 1, 's_329': 2, 's_283': 1, 's_222': 1, 's_262': 2, 's_282': 1, 's_259': 1, 's_305': 1, 's_307': 3, 'm_296_297': 1, 's_304': 1, 's_281': 1, 's_325': 1, 's_326': 1, 's_330': 1, 's_356': 2, 's_328': 1, 's_331': 1}
+add dummy masks
+export masks
+Done

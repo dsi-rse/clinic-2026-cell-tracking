@@ -1,0 +1,25 @@
+===== Fluo-N2DH-GOWT1 01: convert for DET =====
+01_RES_Fluo-N2DH-GOWT1_GT+ST_model_0.45_0.07: wrote 2077 objects to /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DH-GOWT1/01_RES
+===== Fluo-N2DH-GOWT1 01: DET + SEG =====
+Evaluate sequence:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DH-GOWT1/01_RES  with ground truth:  /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DH-GOWT1/01_GTwith results:  {'DET': 0.9867832847424685, 'SEG': 0.8615773648762902, 'OP_CSB': 0.9241803248093794}  done!
+DET: 0.98678
+SEG: 0.86158
+OP_CSB: 0.92418
+===== Fluo-N2DH-GOWT1 02: convert for DET =====
+02_RES_Fluo-N2DH-GOWT1_GT+ST_model_0.45_0.07: wrote 2437 objects to /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DH-GOWT1/02_RES
+===== Fluo-N2DH-GOWT1 02: DET + SEG =====
+Evaluate sequence:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DH-GOWT1/02_RES  with ground truth:  /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DH-GOWT1/02_GTwith results:  {'DET': 0.9402463249900676, 'SEG': 0.8944499920654924, 'OP_CSB': 0.91734815852778}  done!
+DET: 0.94025
+SEG: 0.89445
+OP_CSB: 0.91735
+
+== Fluo-N2DH-GOWT1 segmentation (OP_CSB = 0.5*(DET+SEG)) ==
+  (could not find SEG/DET/TRA columns in /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DH-GOWT1_01_SEG_DET.csv; columns are: ['DET;SEG;OP_CSB'])
+  01: 
+  (could not find SEG/DET/TRA columns in /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DH-GOWT1_02_SEG_DET.csv; columns are: ['DET;SEG;OP_CSB'])
+  02: 
+
+== Fluo-N2DH-GOWT1 tracking (OP_CTB = 0.5*(SEG+TRA)) ==
+  01: missing /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DH-GOWT1_01_tracking_metrics.csv
+  02: missing /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DH-GOWT1_02_tracking_metrics.csv
+Done

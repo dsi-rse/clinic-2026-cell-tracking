@@ -30,6 +30,9 @@ promising approaches to UChicago stem-cell time-lapse microscopy data.
 5. [Evaluation and annotation](docs/evaluation.md)
 6. [Reproducibility standards](docs/reproducibility.md)
 7. [UChicago data access](docs/uchicago-data.md)
+8. [Ultrack benchmark reproducibility](docs/ultrack/ultrack-reproducibility.md)
+9. [Published Ultrack benchmarks](docs/ultrack/ultrack-benchmarks.md)
+10. [Initial Ultrack subset results](docs/ultrack/initial-subset-results.md)
 
 ## Usage
 

@@ -1,0 +1,25 @@
+method: embedtrack
+method_repo: https://github.com/kaloeffler/EmbedTrack
+method_commit: 510bc748230056e50fb8078281d76533f41a1d64
+paper: Loeffler and Mikut, EmbedTrack (IEEE Access 2022; IEEE 9834915; arXiv 2204.10713)
+dataset: Fluo-N2DL-HeLa
+sequences: ["01", "02"]            # CTC training sequences (GT public)
+dataset_archive_sha256: 35dd99d58e071aba0b03880128d920bd1c063783cc280f9531fbdc5be614c82e   # Fluo-N2DL-HeLa.zip (199337935 bytes) downloaded 2026-10-20 from https://data.celltrackingchallenge.net/training-datasets/Fluo-N2DL-HeLa.zip; the shared-drive copy was already unzipped (sequence 01 has 92 frames, same as the archive)
+model: pretrained KIT-Loe-GE (Cell Tracking Challenge submission)
+model_archive_sha256: 0abfa648355fca0380fa6e02aeced3275d0b32de26093ff54f23e9b559fdf89e
+model_file: KIT-Loe-GE/models/Fluo-N2DL-HeLa/best_iou_model.pth
+environment: environments/embedtrack.yaml, plus compatibility patches (diffs in ../20261020_embedtrack_Fluo-N2DH-GOWT1_pretrained-kit-loe-ge/)
+command: sbatch --exclude=k003 jobs/embedtrack_pretrained.sh   # runs notebooks/embedtrack/embedtrack_pretrained_eval.ipynb (GOWT1 results reused), batch_size 32
+seed: null                          # inference only
+cluster_job_id: 2216251
+hardware: 1x NVIDIA A100 80GB (node i001-ds), 8 CPUs, 32G requested
+runtime: "00:06:41"
+peak_memory: MaxRSS 2101364K
+raw_output_location: /home/slwhitney/clinic-2026-cell-tracking/external/EmbedTrack/results/Fluo-N2DL-HeLa/KIT-Loe-GE/train/{01_RES,02_RES}   # not in git; to be moved to the shared project directory
+evaluation_command: CTC EvaluationSoftware (Mac build) {SEG,TRA,DET}Measure <dir containing NN_GT and NN_RES> <seq> 3
+notes: >
+  Scored on training sequences 01/02, not the hidden challenge sequences used in the paper.
+  SEG is 0.022 below the published value and TRA matches within 0.002. Causes not investigated;
+  possible factors are different movies, sparse SEG ground truth in the training sequences, and
+  scorer or environment differences. Linux CTC scorer segfaults on the cluster, so the Mac build was used.
+# Note: this run used an earlier single-dataset copy of the notebook and job script; the code is the same, now merged into one.
