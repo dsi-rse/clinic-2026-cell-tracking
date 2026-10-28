@@ -898,3 +898,64 @@ substantially more objects per frame than either learned input and produces
 366 and 437 track identities, compared with 46 and 67 for Cellpose and 68 and
 106 for StarDist. This run-level evidence strengthens, but does not by itself
 prove, the watershed error carry-over hypothesis.
+
+## Fluo-C3DL-MDA231
+
+### Overall comparison
+
+The project evaluated the authors' official 3D U-Net workflow on public
+training sequence 01. The published paper reports a separate score on the
+hidden CTC test set:
+
+| Result | Evaluation split | SEG | TRA | `OP_CTB` |
+| --- | --- | ---: | ---: | ---: |
+| Project official-workflow run | Public training sequence 01 | 0.385566 | 0.901970 | 0.643768 |
+| Authors' published submission | Hidden CTC test set | 0.549 | 0.818 | 0.683 |
+
+These rows are not a direct reproduction comparison because they use different
+images and annotations. Descriptively, the public-sequence run has higher TRA,
+lower SEG, and a CTB 0.039232 below the published hidden-test result. Those
+differences must not be attributed to implementation quality without a common
+evaluation split.
+
+### Official 3D U-Net
+
+#### Experiment status
+
+The authors' official `Fluo-C3DL-MDA231-01.sh` workflow completed for public
+training sequence 01 using the published `Fluo-C3DL-MDA231.ckpt` checkpoint.
+The exported CTC result passed `py-ctcmetrics` validation and was evaluated on
+2026-10-27.
+
+#### Evaluation results
+
+| Sequence | DET | SEG | TRA | `OP_CTB` |
+| --- | ---: | ---: | ---: | ---: |
+| 01 | 0.909341 | 0.385566 | 0.901970 | 0.643768 |
+
+The reports are stored outside Git at:
+
+```text
+<ULTRACK_RUN_ROOT>/mda231-seq01-official-unet/data/Fluo-C3DL-MDA231/evaluation/01_RES/
+```
+
+Selected tracking-error diagnostics are:
+
+| Node splits | False negatives | False positives | Edges deleted | Edges added | Edges changed |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 9 | 26 | 25 | 1 | 47 | 4 |
+
+#### Interpretation
+
+Detection and tracking are strong on this public sequence: DET and TRA both
+exceed 0.90, with 26 false negatives, 25 false positives, and one deleted
+edge. SEG is substantially lower at 0.385566, so segmentation overlap is the
+main limiting component of the combined CTB score. Overlay movies and 3D slice
+inspection are still needed to determine whether the lower overlap is caused
+by boundary placement, resampling, object extent through z, or another
+dataset-specific effect.
+
+The repository revision, checkpoint hash, A40 GPU model, Slurm job ID, and
+allocation are recorded in the setup guide. The final job state and elapsed
+time, stage runtimes, output counts, GPU driver, warnings, and deviations still
+need to be transcribed from the final run and scheduler logs.

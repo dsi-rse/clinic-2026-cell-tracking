@@ -21,14 +21,15 @@
     - [Configuration](#configuration)
     - [Commands](#commands)
     - [Evaluation](#evaluation)
-  - [Fluo-C3DL-MDA231: published U-Net and raw baseline](#fluo-c3dl-mda231-published-u-net-and-raw-baseline)
-    - [Reproduction target](#reproduction-target)
-    - [Data](#data)
-    - [Published 3D U-Net methodology](#published-3d-u-net-methodology)
-    - [Published-workflow resource requirements](#published-workflow-resource-requirements)
-    - [Official sequence 01 execution](#official-sequence-01-execution)
-    - [Project raw-image subset methodology](#project-raw-image-subset-methodology)
-    - [Evaluation and reporting rules](#evaluation-and-reporting-rules)
+  - [Fluo-C3DL-MDA231](#fluo-c3dl-mda231)
+    - [Dataset and comparison target](#dataset-and-comparison-target-1)
+    - [Data and software](#data-and-software-1)
+    - [Published U-Net and Ultrack configuration](#published-u-net-and-ultrack-configuration)
+    - [Container environment](#container-environment)
+    - [Full-sequence execution](#full-sequence-execution)
+    - [Slurm job and hardware record](#slurm-job-and-hardware-record)
+    - [Output layout](#output-layout-1)
+    - [Evaluation results and command](#evaluation-results-and-command)
   - [Adding another dataset](#adding-another-dataset)
 
 
@@ -44,11 +45,10 @@ with a pretrained StarDist model. No model was trained or fine-tuned during
 these runs. StarDist performed inference to create instance labels, and
 Ultrack used those labels to construct and select tracks.
 
-The 3D `Fluo-C3DL-MDA231` work has two distinct methodologies. The project
-first runs a small raw-image baseline to confirm that the 3D Ultrack pipeline
-works. The published benchmark instead uses a trained 3D U-Net and requires a
-separate GPU environment. These experiments are documented separately so the
-raw baseline is not mistaken for a reproduction of the published result.
+The 3D `Fluo-C3DL-MDA231` experiment uses the authors' published U-Net
+checkpoint and official sequence script in a GPU container. It is kept
+separate from the reusable 2D workflow because it uses the authors' older
+pinned Ultrack submission environment and dataset-specific 3D preprocessing.
 
 ## Methodology and status overview
 
@@ -65,8 +65,7 @@ actually run by this project are marked as reproduced or in progress.
 | `Fluo-N2DH-GOWT1` | StarDist `2D_versatile_fluo` | Additional 2D project experiment | Complete and evaluated for sequences 01 and 02 | No matching published Ultrack benchmark; report as a project result |
 | `Fluo-N2DH-GOWT1` | Watershed | Additional 2D project baseline | Complete and evaluated for sequences 01 and 02 | No matching published Ultrack benchmark; report as an oversegmented project baseline |
 | `Fluo-N2DH-GOWT1` | Watershed + Cellpose + StarDist ensemble | Additional 2D project experiment | Complete and evaluated for sequences 01 and 02 | No matching published Ultrack benchmark; compare only with the project's single-method results |
-| `Fluo-C3DL-MDA231` | Trained 3D U-Net foreground and boundary maps | Published CTC submission method | Official sequence 01 GPU run in progress; completion not yet verified | A public-training run may be compared descriptively, but cannot reproduce the hidden-test score directly |
-| `Fluo-C3DL-MDA231` | Raw-image foreground and contour processing | Project 3D subset baseline | In progress for frames 000--002 | Qualitative and sparse-slice checks only; not the published benchmark |
+| `Fluo-C3DL-MDA231` | Trained 3D U-Net foreground and boundary maps | Published CTC submission method | Official sequence 01 workflow complete and evaluated on public training data | Compare descriptively with the hidden-test result, but do not claim a direct numerical reproduction |
 
 For HeLa, the paper converted every segmentation method's instance labels into
 a binary foreground map and a contour map. Its ensemble combined foreground
@@ -647,23 +646,23 @@ with `SEQUENCE=02`. The completed scores, run-report summaries, cross-method
 comparison, and ensemble carry-over hypothesis are recorded in the
 [GOWT1 results section](ultrack-results.md#fluo-n2dh-gowt1).
 
-## Fluo-C3DL-MDA231: published U-Net and raw baseline
+## Fluo-C3DL-MDA231
 
-### Reproduction target
+### Dataset and comparison target
 
-The ECCV paper reports the following result for the authors' CTC submission:
+The project reproduced the authors' official U-Net-to-Ultrack workflow on
+public training sequence 01. The ECCV paper reports the following result for
+the separate hidden CTC test set:
 
-| Evaluation split | SEG | TRA | CTB |
+| Evaluation split | SEG | TRA | `OP_CTB` |
 | --- | ---: | ---: | ---: |
 | Hidden CTC test set | 0.549 | 0.818 | 0.683 |
 
-The project has the public CTC training sequences and annotations, not the
-hidden test annotations used for this table. Consequently, even a successful
-run with the authors' code and checkpoint is a method reproduction on a
-different evaluation split, not a direct numerical reproduction of the
-published hidden-test result.
+The hidden test annotations are not publicly available. The project result is
+therefore a method reproduction on public training data, not a direct
+numerical reproduction of the published hidden-test score.
 
-### Data
+### Data and software
 
 | Item | Recorded value |
 | --- | --- |
@@ -673,37 +672,31 @@ published hidden-test result.
 | Number of frames | 12 |
 | Raw volume shape | 30 x 512 x 512 voxels `(Z, Y, X)` |
 | Image type | `uint16` |
-| Sparse gold segmentation | Selected 2D z-slices named `man_seg_TTT_ZZZ.tif` |
-| Tracking ground truth | Complete 3D masks for the 12 public training frames |
+| Submission code | [`royerlab/ultrack_CTC_submission`, branch `submission-2023-10`](https://github.com/royerlab/ultrack_CTC_submission/tree/submission-2023-10) |
+| Submission repository commit | `fa6a20a64ac9e95893d4c0747bb20d333f731d49` |
+| Sequence script | `Fluo-C3DL-MDA231-01.sh` |
+| Model checkpoint | Published `Fluo-C3DL-MDA231.ckpt`; no local training or fine-tuning |
+| Checkpoint SHA-256 | `d4215cdb4c4fc4fb1ef51b7e95a36f33394b046e21207f6e95f1983dc0f8203c` |
+| Checkpoint acquisition date | 2026-10-27 |
+| Container base | `docker.io/royerlab/ultrack:0.6.1-cuda11.8` |
+| Solver | Gurobi WLS using the version pinned by the authors' container |
+| GPU | NVIDIA A40; 46,068 MiB available |
+| Container runtime | Apptainer SIF built from the authors' Docker image |
+| Run date | 2026-10-27 |
 
-The sparse segmentation filenames contain both a time index and a z-slice
-index. For example, `man_seg_000_013.tif` annotates z-slice 13 of frame 000; it
-is not a complete 3D segmentation volume.
+The sparse gold segmentation contains selected 2D z-slices named
+`man_seg_TTT_ZZZ.tif`. For example, `man_seg_000_013.tif` annotates z-slice 13
+of frame 000; it is not a complete 3D segmentation volume. The tracking ground
+truth contains complete 3D masks for the 12 public training frames.
 
-### Published 3D U-Net methodology
+### Published U-Net and Ultrack configuration
 
-For MDA231, the authors trained a 3D U-Net to predict two voxelwise outputs:
-cell foreground and cell boundaries. The published submission code calls this
-network `EdgeUNet`. It uses 3D convolutions, feature widths of 32, 64, 128, and
-256, a kernel size of 5, linear interpolation in the decoder, and no residual
-connections or batch normalization.
+The authors' `EdgeUNet` predicts voxelwise foreground and boundary maps. The
+published checkpoint is used directly; retraining is not part of this
+reproduction. The official sequence script applies the complete
+preprocessing, inference, Ultrack, and export workflow:
 
-The paper's supplementary methodology reports:
-
-- 20 training epochs;
-- an initial learning rate of `1e-4`;
-- exponential learning-rate decay of `0.95` after each epoch; and
-- both public training sequences for learning the final submission weights.
-
-Retraining is not required for the first reproduction attempt because the
-authors published the pretrained `Fluo-C3DL-MDA231.ckpt` checkpoint. The
-project should use the authors' checkpoint before considering any locally
-trained alternative.
-
-The official sequence 01 script applies the following preprocessing and
-inference settings:
-
-| Stage | Parameter | Published submission value |
+| Stage | Parameter | Value |
 | --- | --- | --- |
 | Normalization | Lower quantile | `0.0001` |
 | Normalization | Upper quantile | `0.9999` |
@@ -711,173 +704,262 @@ inference settings:
 | U-Net inference | Tile shape | `(150, 512, 512)` |
 | U-Net inference | Tile overlap | `(0, 0, 0)` |
 | Boundary output | Gaussian sigma | `(0.5, 0.5, 0.5)` |
+| Ultrack | Dataset configuration | `Fluo-C3DL-MDA231/config.toml` |
 | CTC export | Scale | `(0.2, 1, 1)` |
 | CTC export | Margin | `25` |
 | CTC export | Dilation iterations | `1` |
 
-The U-Net's foreground prediction is passed to Ultrack as the detection layer,
-and its smoothed boundary prediction is passed as the edge layer. Ultrack then
-performs segmentation-hypothesis generation, linking, optimization, and CTC
-export using the dataset-specific configuration in the authors' repository.
+The predicted foreground is passed to Ultrack as the detection layer, and the
+smoothed boundary prediction is passed as the edge layer. The official script
+then runs Ultrack segmentation, linking, solving, and CTC export. Gold
+segmentation and tracking annotations are used only for evaluation.
 
-The authoritative implementation is the
-[`submission-2023-10` branch of `royerlab/ultrack_CTC_submission`](https://github.com/royerlab/ultrack_CTC_submission/tree/submission-2023-10).
-The project notebook references that implementation instead of copying and
-maintaining a second version of the U-Net architecture.
+### Container environment
 
-### Published-workflow resource requirements
+The official submission uses older pinned dependencies and must remain
+separate from the project's Ultrack 0.8 environments. Docker is unavailable on
+the cluster, so the successful workflow builds the image with rootless Podman,
+converts it to an Apptainer SIF, and uses Apptainer's `--nv` support at run
+time.
 
-The authors document an NVIDIA GPU with at least 12 GB of memory for inference;
-their run was tested with a 24 GB GPU. Their Docker workflow also requires a
-Gurobi WLS license. Training a new U-Net may require at least 24 GB of GPU
-memory, but training is outside the first reproduction attempt because
-pretrained weights are available.
-
-The official workflow uses older pinned submission code and dependencies. It
-should therefore run in its own environment or container rather than being
-merged into the current Ultrack 0.8 CPU environment without validation. A run
-record must include:
-
-- the submission repository commit and branch;
-- the checkpoint path and file identity;
-- the environment or container identifier;
-- the GPU model and available memory from `nvidia-smi`;
-- the exact sequence script and any local changes;
-- the normalization, inference, Ultrack, and export runtimes; and
-- all deviations from the authors' configuration.
-
-The executable preparation and validation record is
-[`03_mda231_seq01_benchmark.ipynb`](../../notebooks/ultrack/03_mda231_seq01_benchmark.ipynb).
-It uses a private staging directory because the official script writes a
-`01_RES` directory below its configured data root. The shared CTC dataset must
-not be used as that writable output root.
-
-### Official sequence 01 execution
-
-The MDA231 U-Net workflow uses the authors' official sequence script,
-`Fluo-C3DL-MDA231-01.sh`, from the checked-out submission repository. It does
-not use the project's `run_2d_benchmark.py` script. The official sequence 01
-run was launched on an allocated GPU node on 2026-10-27; its completion and
-outputs have not yet been verified.
-
-Set the shared data, run, and official-submission repository roots:
+Set the storage locations and obtain the official repository and checkpoint:
 
 ```bash
-export CTC_ROOT=/net/spaces/clinic/CLS/DSC_CTC
-export ULTRACK_RUN_ROOT=/net/spaces/clinic/CLS/DSC_CTC/runs/ultrack
-export ULTRACK_CTC_REPO=/net/spaces/clinic/CLS/DSC_CTC/models/ultrack_CTC_submission
+export CTC_ROOT=/path/to/DSC_CTC
+export ULTRACK_CTC_REPO="$CTC_ROOT/models/ultrack_CTC_submission"
+export CONTAINER_ROOT="$ULTRACK_CTC_REPO/container"
+export CONTAINER_TAR="$CONTAINER_ROOT/ultrack-ctc.tar"
+export CONTAINER_SIF="$CONTAINER_ROOT/ultrack-ctc.sif"
 
-export MDA_RUN_ROOT="$ULTRACK_RUN_ROOT/mda231-seq01-official-unet"
+git clone --branch submission-2023-10 --single-branch \
+    https://github.com/royerlab/ultrack_CTC_submission.git \
+    "$ULTRACK_CTC_REPO"
+
+mkdir -p "$ULTRACK_CTC_REPO/weights"
+wget -nc -P "$ULTRACK_CTC_REPO/weights" \
+    https://public.czbiohub.org/royerlab/ultrack/CTC/weights/2023_10/Fluo-C3DL-MDA231.ckpt
 ```
 
-Before launching the workflow, verify that the official script and pretrained
-checkpoint exist and record the allocated NVIDIA GPU:
+Record the exact source and checkpoint identities before execution:
 
 ```bash
-ls "$ULTRACK_CTC_REPO/Fluo-C3DL-MDA231-01.sh"
-ls "$ULTRACK_CTC_REPO/weights/Fluo-C3DL-MDA231.ckpt"
-nvidia-smi
+git -C "$ULTRACK_CTC_REPO" rev-parse HEAD
+sha256sum "$ULTRACK_CTC_REPO/weights/Fluo-C3DL-MDA231.ckpt"
 ```
 
-Do not rerun the authors' `download.sh` when the checkpoint is already
-present. Reusing the existing checkpoint avoids an unnecessary download and
-helps preserve the exact model file used for the experiment.
+The recorded identities are:
 
-The run uses a writable staging directory below the Ultrack run root. Only the
-raw sequence is linked into this directory; the shared CTC dataset remains
-unchanged.
+| Item | Recorded value |
+| --- | --- |
+| Repository branch | `submission-2023-10` |
+| Repository commit | `fa6a20a64ac9e95893d4c0747bb20d333f731d49` |
+| Checkpoint path | `weights/Fluo-C3DL-MDA231.ckpt` |
+| Checkpoint SHA-256 | `d4215cdb4c4fc4fb1ef51b7e95a36f33394b046e21207f6e95f1983dc0f8203c` |
+| Checkpoint source | [Official CZ Biohub URL used by the authors' `download.sh`](https://public.czbiohub.org/royerlab/ultrack/CTC/weights/2023_10/Fluo-C3DL-MDA231.ckpt) |
+
+The `wget -nc` option prevents an existing checkpoint from being overwritten,
+but it does not validate the file. The recorded SHA-256 must be checked before
+reuse. A different hash must be treated as a different model artifact until
+its provenance is established.
+
+Build the authors' Dockerfile with its fully qualified base-image name. The
+`cgroupfs` setting is required for rootless Podman inside a Slurm allocation:
 
 ```bash
-mkdir -p "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231"
+cd "$ULTRACK_CTC_REPO"
+unset XDG_RUNTIME_DIR
+
+podman --cgroup-manager=cgroupfs build \
+    --from docker.io/royerlab/ultrack:0.6.1-cuda11.8 \
+    --tag ultrack-ctc \
+    .
+```
+
+Save and convert the image. Apptainer's cache and temporary directories must
+be placed in shared storage because unpacking the image exceeds the compute
+node's `/tmp` capacity:
+
+```bash
+mkdir -p "$CONTAINER_ROOT"
+
+podman save \
+    --format docker-archive \
+    --output "$CONTAINER_TAR" \
+    localhost/ultrack-ctc:latest
+
+export APPTAINER_TMPDIR="$CONTAINER_ROOT/apptainer-tmp"
+export APPTAINER_CACHEDIR="$CONTAINER_ROOT/apptainer-cache"
+export TMPDIR="$APPTAINER_TMPDIR"
+
+mkdir -p "$APPTAINER_TMPDIR" "$APPTAINER_CACHEDIR"
+
+apptainer build \
+    "$CONTAINER_SIF" \
+    docker-archive:"$CONTAINER_TAR"
+```
+
+The completed Podman image was 17.4 GB, and the SIF was 6.9 GB. Confirm that
+the SIF exposes the allocated GPU and that PyTorch can use CUDA:
+
+```bash
+apptainer exec --nv "$CONTAINER_SIF" nvidia-smi
+
+apptainer exec --nv "$CONTAINER_SIF" \
+    python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+```
+
+### Full-sequence execution
+
+The official script writes its result below `DATA_DIR`, so the shared CTC
+dataset must not be used as the writable output root. Copy the 12 raw volumes
+into a private run directory. A copy is used instead of an external symbolic
+link because the link target would not be visible at the container mount
+point.
+
+```bash
+export MDA_RUN_ROOT="$CTC_ROOT/runs/ultrack/mda231-seq01-official-unet"
+export GRB_LICENSE_FILE=/path/to/gurobi.lic
+
+mkdir -p "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231/01"
 mkdir -p "$MDA_RUN_ROOT/work"
 
-if [ ! -e "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231/01" ]; then
-    ln -s \
-        "$CTC_ROOT/ctc/Fluo-C3DL-MDA231/01" \
-        "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231/01"
-fi
+cp "$CTC_ROOT/ctc/Fluo-C3DL-MDA231/01/"t*.tif \
+    "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231/01/"
 
-cd "$ULTRACK_CTC_REPO"
-
-DATA_DIR="$MDA_RUN_ROOT/data" \
-WK_DIR="$MDA_RUN_ROOT/work" \
-bash Fluo-C3DL-MDA231-01.sh
+find "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231/01" \
+    -maxdepth 1 -name 't*.tif' | wc -l
 ```
 
-If the workflow completes successfully, the expected public sequence 01 CTC
-result directory is:
+The frame count must be 12. Run the official sequence script inside the SIF:
+
+```bash
+apptainer exec --nv --writable-tmpfs \
+    --bind "$ULTRACK_CTC_REPO/weights:/app/weights:ro" \
+    --bind "$MDA_RUN_ROOT/data:/app/data" \
+    --bind "$MDA_RUN_ROOT/work:/wkdir" \
+    --bind "$GRB_LICENSE_FILE:/tmp/gurobi.lic:ro" \
+    --env DATA_DIR=/app/data \
+    --env WK_DIR=/wkdir \
+    --env GRB_LICENSE_FILE=/tmp/gurobi.lic \
+    "$CONTAINER_SIF" \
+    bash -lc 'cd /app && bash Fluo-C3DL-MDA231-01.sh'
+```
+
+`--writable-tmpfs` supplies the writable layer needed for the script's local
+Ultrack database. The persistent image arrays, predictions, and CTC result are
+written through the bound data and work directories.
+
+Apptainer reported a FUSE-overlay cleanup warning after all 12 masks had been
+exported. This was treated as nonfatal only after the complete result passed
+CTC validation.
+
+### Slurm job and hardware record
+
+The official MDA231 workflow ran inside interactive Slurm allocation
+`2259559`. The workflow and evaluation completed while the surrounding
+interactive `bash` job remained active. The resource values below are a live
+snapshot taken after 2:29:31 of allocation time; the final scheduler state and
+elapsed time must be updated after the shell exits.
+
+Capture the active allocation and GPU before execution:
+
+```bash
+printf 'SLURM_JOB_ID=%s\n' "${SLURM_JOB_ID:-not-set}"
+hostname
+nvidia-smi \
+    --query-gpu=name,memory.total,driver_version \
+    --format=csv,noheader
+```
+
+After the job, record its scheduler history using the actual job ID:
+
+```bash
+export MDA_JOB_ID=2259559
+
+sacct -j "$MDA_JOB_ID" \
+    --format=JobID,JobName,Partition,State,Elapsed,AllocCPUS,ReqMem,MaxRSS,NodeList,AllocTRES
+```
+
+| Job field | Recorded value |
+| --- | --- |
+| Slurm job ID | `2259559` |
+| Job name and command | Interactive `bash`; `/bin/bash` |
+| Account and QOS | `general_group`; `general` |
+| Partition and node | `general`; `g004` |
+| Start time | 2026-10-27 20:43:03 |
+| Time limit | 4 hours |
+| State at snapshot | `RUNNING`; final state pending |
+| Elapsed time at snapshot | 2:29:31; final elapsed time pending |
+| Allocation | 1 node; 4 CPUs; 32 GB requested memory; 1 GPU |
+| GPU | NVIDIA A40; 46,068 MiB available |
+| GPU driver | Pending |
+| Main-step MaxRSS at snapshot | 33,384,332 KiB, approximately 31.8 GiB |
+| Extern-step MaxRSS at snapshot | 1,154,532 KiB, approximately 1.1 GiB |
+| Main-step average CPU time at snapshot | 1:50:09 |
+
+The main-step MaxRSS is close to the 32 GB memory request. Because this value
+covers the entire interactive `.0` step rather than an isolated invocation of
+the MDA231 script, it is a conservative allocation record, not a precise model
+inference requirement. Future reproductions should request at least the same
+memory unless a controlled run measures the script separately. The validated
+CTC output proves that the workflow produced a complete result; it does not
+replace the final scheduler record needed to confirm how the interactive
+allocation ended.
+
+### Output layout
+
+The successful run produced:
 
 ```text
-/net/spaces/clinic/CLS/DSC_CTC/runs/ultrack/mda231-seq01-official-unet/data/Fluo-C3DL-MDA231/01_RES
+<CTC_ROOT>/runs/ultrack/mda231-seq01-official-unet/
+├── data/Fluo-C3DL-MDA231/
+│   ├── 01/
+│   │   ├── t000.tif
+│   │   └── ... t011.tif
+│   ├── 01_RES/
+│   │   ├── mask000.tif
+│   │   ├── ... mask011.tif
+│   │   └── res_track.txt
+│   └── evaluation/01_RES/
+│       ├── ctc_metrics.csv
+│       └── ctc_metrics.json
+└── work/Fluo-C3DL-MDA231/01/
+    ├── image.zarr/
+    └── image_pred_both.zarr/
 ```
 
-The corresponding preparation notebook is
+The 12 result masks and nonempty lineage file confirm structural completion;
+the CTC evaluator provides the accuracy and validity checks.
+
+### Evaluation results and command
+
+Run evaluation from the project repository, not from the authors' submission
+repository:
+
+```bash
+cd /path/to/clinic-2026-cell-tracking
+micromamba activate cell-tracking-ctc-evaluation
+
+python scripts/ultrack/evaluate_ctc_result.py \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-C3DL-MDA231/01_GT" \
+    --result-dir "$MDA_RUN_ROOT/data/Fluo-C3DL-MDA231/01_RES" \
+    --dataset Fluo-C3DL-MDA231 \
+    --method ultrack-official-unet \
+    --num-workers 4
+```
+
+The public-sequence result passed validation:
+
+| Valid | DET | SEG | TRA | `OP_CTB` |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.909341 | 0.385566 | 0.901970 | 0.643768 |
+
+The evaluation reports remain with the cluster run under
+`data/Fluo-C3DL-MDA231/evaluation/01_RES/`. Interpretation and the split-aware
+comparison with the authors' hidden-test result are recorded in the
+[MDA231 results section](ultrack-results.md#fluo-c3dl-mda231). The executable
+preparation record is
 [`03_mda231_seq01_benchmark.ipynb`](../../notebooks/ultrack/03_mda231_seq01_benchmark.ipynb).
-After the run finishes, record the submission repository revision, checkpoint
-identity, GPU details, stage runtimes, output counts, warnings, deviations,
-and CTC evaluation in this document and in `ultrack-results.md`.
-
-### Project raw-image subset methodology
-
-Before attempting the separate GPU workflow, the project uses frames 000--002
-to verify that Ultrack can process the 3D volume structure end to end. This
-baseline derives both inputs directly from the raw volumes:
-
-```python
-foreground = detect_foreground(
-    volume,
-    sigma=15.0,
-    remove_hist_mode=False,
-    min_foreground=0.0,
-)
-contours = robust_invert(volume, sigma=1.0)
-```
-
-The resulting arrays have shape `(T, Z, Y, X)`. Ultrack uses the same shared
-filesystem worker settings as the 2D runs: one database worker, four
-segmentation workers, one linking worker, and four Gurobi threads.
-
-This is an exploratory baseline, not a replacement for the U-Net. It differs
-from the paper in its image normalization, anisotropy handling, foreground
-estimator, boundary estimator, learned weights, and possibly the Ultrack
-configuration version.
-
-The baseline is inspected with:
-
-- middle z-slices and maximum-intensity projections of the raw volumes;
-- corresponding foreground and contour slices;
-- sparse gold and detected-foreground overlays on the same annotated z-slice;
-- per-object gold-pixel coverage and best-component IoU on annotated slices;
-- matched and missed gold-object counts at 50% coverage; and
-- result-label overlays after segmentation, linking, and solving.
-
-Detections on unannotated z-slices are not counted as false positives. Exact
-boundary overlays are treated as qualitative checks because a one-pixel shift
-can remove exact overlap even when two boundaries are visually close.
-
-The executable record is
-[`03_mda231_raw_to_tracks.ipynb`](../../notebooks/ultrack/03_mda231_raw_to_tracks.ipynb).
-Its output directory is named `mda231-seq01-t000-002-raw`, and any CTC-style
-subset export must be named `subset_RES` rather than `01_RES`.
-
-### Evaluation and reporting rules
-
-The appropriate evaluation depends on which methodology and frame range were
-run:
-
-| Experiment | Appropriate evaluation | Prohibited claim |
-| --- | --- | --- |
-| Three-frame raw baseline | Qualitative 3D review and sparse annotated-slice coverage/IoU | Do not report it as the published U-Net result or as a full CTC benchmark |
-| Complete public sequence with the authors' U-Net checkpoint | CTC SEG, TRA, and `OP_CTB` against public `01_GT`, plus qualitative review | Do not call the values a direct reproduction of hidden-test scores |
-| Authors' published hidden-test submission | Cite SEG 0.549, TRA 0.818, and CTB 0.683 | Do not imply that hidden labels are locally available |
-
-At the time of writing, the HeLa and GOWT1 watershed, Cellpose, StarDist, and
-ensemble experiments are complete and evaluated. Their available run-report
-summaries are recorded in the results document. The raw MDA231 subset is an
-additional experiment, and the official MDA231 sequence 01 U-Net workflow is
-running on an allocated GPU node. Its completion has not yet been verified.
-This status should be updated only after the corresponding outputs and run
-records have been checked.
 
 ## Adding another dataset
 
