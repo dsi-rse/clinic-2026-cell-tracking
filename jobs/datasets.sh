@@ -1,14 +1,32 @@
-""" Per-dataset settings for the KIT-GE (3) pipeline.
+# Per-dataset settings for the KIT-GE (3) pipeline.
 
-Defaults come from the best_settings in models/kit-sch-ge/<dataset>_GT+ST_model.json"""
+# Defaults come from the best_settings in models/kit-sch-ge/<dataset>_GT+ST_model.json
 
-PROJ=/net/scratch/evt-kit-ge/clinic-2026-cell-tracking
-JOBS=$PROJ/jobs
-SEGREPO=/net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC
-TRKREPO=/net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Tracking-for-CTC
-SEGENV=$SEGREPO/env
-TRKPY=/home/evt/.conda/envs/tracking_env/bin/python
-export GRB_LICENSE_FILE=$HOME/gurobi.lic
+JOBS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT=${REPO_ROOT:-$(dirname "$JOBS_DIR")}
+
+SEG_REPO=${SEG_REPO:-$REPO_ROOT/external/KIT-GE-3-Cell-Segmentation-for-CTC}
+TRK_REPO=${TRK_REPO:-$REPO_ROOT/external/KIT-GE-3-Cell-Tracking-for-CTC}
+
+SEG_ENV=${SEG_ENV:-$SEG_REPO/env}
+TRK_ENV=${TRK_ENV:-$HOME/.conda/envs/tracking_env}
+
+SEG_EVAL_DIR=${SEG_EVAL_DIR:-$REPO_ROOT/seg_eval}
+TRACK_DIR=${TRACK_DIR:-$REPO_ROOT/tracking_results}
+
+export GRB_LICENSE_FILE=${GRB_LICENSE_FILE:-$HOME/gurobi.lic}
+
+SEG_PY=$SEG_ENV/bin/python
+TRK_PY=$TRK_ENV/bin/python
+CTC_EVALUATE=$SEG_ENV/bin/ctc_evaluate
+CTC_VALIDATE=$SEG_ENV/bin/ctc_validate
+
+# A warning for paths that don't exist
+for p in "$SEG_REPO" "$TRK_REPO" "$SEG_ENV" "$TRK_ENV"; do
+  if [ ! -e "$p" ]; then
+    echo "WARNING: $p does not exist. Export the matching variable (see datasets.sh)." >&2
+  fi
+done
 
 case "$1" in
   Fluo-N2DL-HeLa)   TH_SEED=0.35; TH_CELL=0.07; SCALE=1; BS=16; FUSE=0; AC=0
@@ -25,6 +43,6 @@ esac
 DS=$1
 MODEL_NAME=${DS}_GT+ST_model
 TAG=${MODEL_NAME}_${TH_SEED}_${TH_CELL}
-DATA=$SEGREPO/training_data/$DS
-SEGEVAL_OUT=$PROJ/seg_eval/$DS
-TRACK_OUT=$PROJ/tracking_results/$DS
+DATA=$SEG_REPO/training_data/$DS
+SEGEVAL_OUT=$SEG_EVAL_DIR/$DS
+TRACK_OUT=$TRACK_DIR/$DS

@@ -3,7 +3,9 @@
 # Usage:  bash full_job.sh <dataset> [<dataset> ...]
 #   e.g.  bash full_job.sh Fluo-N2DH-GOWT1 Fluo-C3DL-MDA231 Fluo-C3DH-H157
 set -e
-cd /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/jobs
+cd "$(dirname "$0")"
+export JOBS_DIR=$PWD
+
 for D in "$@"; do
   source ./datasets.sh "$D"
   SEG=$(sbatch --parsable -J "seg-$DS" --time=$SEG_TIME segmentation.sh "$DS")

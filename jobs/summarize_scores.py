@@ -1,11 +1,19 @@
-"""Print per-sequence and mean scores, OP_CSB and OP_CTB, from ctc_evaluate CSV files."""
+"""Print per-sequence and mean scores, OP_CSB and OP_CTB, from ctc_evaluate CSV files.
 
-import sys
+Expects the CSV names written by seg_eval.sh and track_eval.sh:
+    <seg_eval_dir>/<ds>_<seq>_SEG_DET.csv
+    <track_dir>/<ds>_<seq>_tracking_metrics.csv
+
+Usage:
+    python summarize_scores.py <dataset> --seg_eval_dir DIR --track_dir DIR
+"""
+
+import argparse
+import os
 from pathlib import Path
 
 import pandas as pd
 
-PROJ = Path("/net/scratch/evt-kit-ge/clinic-2026-cell-tracking")
 SEQUENCES = ("01", "02")
 
 
@@ -13,7 +21,7 @@ def read_metrics(path):
     """Return the SEG/DET/TRA values from one ctc_evaluate CSV file, or None if it is missing."""
     if not path.exists():
         return None
-    metrics_df = pd.read_csv(path)
+    metrics_df = pd.read_csv(path, sep=None, engine="python")
     cols = {c.strip().upper(): c for c in metrics_df.columns}
     out = {
         m: float(metrics_df[cols[m]].iloc[0])
@@ -53,17 +61,30 @@ def report(title, files, combo):
         )
 
 
-ds = sys.argv[1]
-report(
-    f"{ds} segmentation (OP_CSB = 0.5*(DET+SEG))",
-    {s: PROJ / "seg_eval" / f"{ds}_{s}_SEG_DET.csv" for s in SEQUENCES},
-    ("DET", "SEG"),
-)
-report(
-    f"{ds} tracking (OP_CTB = 0.5*(SEG+TRA))",
-    {
-        s: PROJ / "tracking_results" / f"{ds}_{s}_tracking_metrics.csv"
-        for s in SEQUENCES
-    },
-    ("SEG", "TRA"),
-)
+def main():
+    """Parse arguments and print the segmentation and tracking summaries."""
+    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p.add_argument("ds", help="dataset, e.g. Fluo-N2DL-HeLa")
+    p.add_argument("--seg_eval_dir", type=Path, default=os.environ.get("SEG_EVAL_DIR"))
+    p.add_argument("--track_dir", type=Path, default=os.environ.get("TRACK_DIR"))
+    a = p.parse_args()
+    if a.seg_eval_dir is None or a.track_dir is None:
+        p.error(
+            "--seg_eval_dir and --track_dir are required (or set SEG_EVAL_DIR / TRACK_DIR)"
+        )
+    a.seg_eval_dir, a.track_dir = Path(a.seg_eval_dir), Path(a.track_dir)
+
+    report(
+        f"{a.ds} segmentation (OP_CSB = 0.5*(DET+SEG))",
+        {s: a.seg_eval_dir / f"{a.ds}_{s}_SEG_DET.csv" for s in SEQUENCES},
+        ("DET", "SEG"),
+    )
+    report(
+        f"{a.ds} tracking (OP_CTB = 0.5*(SEG+TRA))",
+        {s: a.track_dir / f"{a.ds}_{s}_tracking_metrics.csv" for s in SEQUENCES},
+        ("SEG", "TRA"),
+    )
+
+
+if __name__ == "__main__":
+    main()

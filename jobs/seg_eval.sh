@@ -8,12 +8,12 @@
 set -e
 source /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/jobs/datasets.sh "${1:?usage: sbatch seg_eval.sh <dataset>}"
 
+mkdir -p "$SEG_EVAL_DIR"
 for SEQ in 01 02; do
-  echo "===== $DS $SEQ: convert for DET ====="
-  $SEGENV/bin/python $JOBS/seg_to_tracks.py $DATA/${SEQ}_RES_$TAG $SEGEVAL_OUT/${SEQ}_RES
-  echo "===== $DS $SEQ: DET + SEG ====="
-  $SEGENV/bin/ctc_evaluate --gt $DATA/${SEQ}_GT --res $SEGEVAL_OUT/${SEQ}_RES --det --seg \
-      --csv-file $PROJ/seg_eval/${DS}_${SEQ}_SEG_DET.csv
+  "$SEG_PY" "$JOBS_DIR/seg_to_tracks.py" "$DATA/${SEQ}_RES_$TAG" "$SEGEVAL_OUT/${SEQ}_RES"
+  "$CTC_EVALUATE" --gt "$DATA/${SEQ}_GT" --res "$SEGEVAL_OUT/${SEQ}_RES" --det --seg \
+      --csv-file "$SEG_EVAL_DIR/${DS}_${SEQ}_SEG_DET.csv"
 done
-$SEGENV/bin/python $JOBS/summarize_scores.py "$DS" || true
+"$SEG_PY" "$JOBS_DIR/summarize_scores.py" "$DS" --seg_eval_dir "$SEG_EVAL_DIR" --track_dir "$TRACK_DIR" || true
+
 echo "Done"
