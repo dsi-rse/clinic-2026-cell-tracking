@@ -25,9 +25,7 @@ def extract_frame_number(path: Path, expected_prefix: str | None = None) -> int:
         match = re.fullmatch(pattern, path.name)
         if match is None:
             example = f"{expected_prefix}000.tif"
-            raise ValueError(
-                f"Expected a filename like {example}, got {path.name}."
-            )
+            raise ValueError(f"Expected a filename like {example}, got {path.name}.")
         return int(match.group("frame"))
 
     match = FRAME_NUMBER_PATTERN.search(path.stem)
