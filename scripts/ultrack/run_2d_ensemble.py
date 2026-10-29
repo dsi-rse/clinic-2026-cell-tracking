@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import re
 import time
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
@@ -11,9 +10,9 @@ from typing import Any
 
 import tifffile
 
+from cell_tracking.ctc_io import extract_frame_number
 from cell_tracking.ultrack_2d import combine_label_stacks
 
-FRAME_PATTERN = re.compile(r"^t(?P<frame>\d+)\.tif$")
 EXPECTED_IMAGE_DIMENSIONS = 2
 MINIMUM_WORKER_COUNT = 1
 
@@ -82,14 +81,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def extract_frame_number(path: Path) -> int:
-    """Extract a frame number from a raw CTC filename."""
-    match = FRAME_PATTERN.fullmatch(path.name)
-    if match is None:
-        raise ValueError(f"Expected a filename like t000.tif, got {path.name}.")
-    return int(match.group("frame"))
-
-
 def select_raw_paths(
     input_dir: Path,
     frame_start: int,
@@ -100,7 +91,7 @@ def select_raw_paths(
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
 
     all_paths = sorted(input_dir.glob("t*.tif"))
-    all_frames = [extract_frame_number(path) for path in all_paths]
+    all_frames = [extract_frame_number(path, expected_prefix="t") for path in all_paths]
     selected = [
         (path, frame)
         for path, frame in zip(all_paths, all_frames)

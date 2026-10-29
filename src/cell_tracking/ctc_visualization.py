@@ -6,6 +6,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+from cell_tracking.ultrack_2d import find_label_boundaries
+
 EXPECTED_DIMENSIONS = 2
 RGB_MAXIMUM = 255
 DEFAULT_HEADER_HEIGHT = 62
@@ -39,16 +41,6 @@ def normalize_raw_image(
 
     normalized = np.clip((image.astype(np.float32) - lower) / (upper - lower), 0, 1)
     return (normalized * RGB_MAXIMUM).astype(np.uint8)
-
-
-def find_label_boundaries(labels: np.ndarray) -> np.ndarray:
-    """Return inner boundaries between labels and their neighbors."""
-    boundaries = np.zeros_like(labels, dtype=bool)
-    boundaries[1:, :] |= labels[1:, :] != labels[:-1, :]
-    boundaries[:-1, :] |= labels[:-1, :] != labels[1:, :]
-    boundaries[:, 1:] |= labels[:, 1:] != labels[:, :-1]
-    boundaries[:, :-1] |= labels[:, :-1] != labels[:, 1:]
-    return boundaries & (labels != 0)
 
 
 def widen_mask(mask: np.ndarray, width: int) -> np.ndarray:

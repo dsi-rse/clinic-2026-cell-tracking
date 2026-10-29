@@ -1,17 +1,16 @@
 """Render a 2D CTC prediction-versus-ground-truth overlay movie."""
 
 import argparse
-import re
 from pathlib import Path
 
 import tifffile
 
+from cell_tracking.ctc_io import extract_frame_number
 from cell_tracking.ctc_visualization import (
     render_overlay_frame,
     save_animated_gif,
 )
 
-FRAME_PATTERN = re.compile(r"^mask(?P<frame>\d+)\.tif$")
 GROUND_TRUTH_SOURCES = ("TRA", "SEG")
 
 
@@ -94,14 +93,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def extract_frame_number(path: Path) -> int:
-    """Extract the frame number from a CTC result-mask filename."""
-    match = FRAME_PATTERN.fullmatch(path.name)
-    if match is None:
-        raise ValueError(f"Expected a filename like mask000.tif, got {path.name}.")
-    return int(match.group("frame"))
-
-
 def validate_args(args: argparse.Namespace) -> None:
     """Validate numeric and directory arguments."""
     for directory in (args.raw_dir, args.ground_truth_dir, args.result_dir):
@@ -151,12 +142,13 @@ def main() -> None:
     validate_args(args)
 
     result_paths = sorted(args.result_dir.glob("mask*.tif"))
-    selected = [
-        (extract_frame_number(path), path)
-        for path in result_paths
-        if extract_frame_number(path) >= args.frame_start
-        and (args.frame_stop is None or extract_frame_number(path) < args.frame_stop)
-    ]
+    selected = []
+    for path in result_paths:
+        frame_number = extract_frame_number(path, expected_prefix="mask")
+        if frame_number >= args.frame_start and (
+            args.frame_stop is None or frame_number < args.frame_stop
+        ):
+            selected.append((frame_number, path))
     if args.only_annotated:
         selected = [
             (frame_number, path)
