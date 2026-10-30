@@ -1,0 +1,151 @@
+ /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa/01_RESValid: 1.0
+Evaluate sequence:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa/01_RES  with ground truth:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DL-HeLa/01_GTwith results:  {'Valid': 1, 'CHOTA': 0.9063684330286387, 'BC': None, 'CT': 0.5889101338432122, 'CCA': 0.9464285714285714, 'TF': 0.9591832960125777, 'SEG': 0.8553199428830528, 'TRA': 0.9834379692239477, 'DET': 0.9852297719643477, 'MOTA': 0.9604120847320292, 'HOTA': 0.9046438634618118, 'IDF1': 0.8690846286701209, 'MTML': None, 'FAF': 2.347826086956522, 'LNK': 0.9713851903760804, 'OP_CTB': 0.9193789560535002, 'OP_CSB': 0.9202748574237003, 'BIO': None, 'OP_CLB': None, 'AOGM': 1643.5, 'AOGM_0': 99233.0, 'AOGM_NS': 30, 'AOGM_FN': 94, 'AOGM_FP': 186, 'AOGM_ED': 12, 'AOGM_EA': 213, 'AOGM_EC': 36, 'gt_divisions': 94, 'tp_div(0)': 61, 'fp_div(0)': 7, 'fn_div(0)': 33, 'BC(0)': 0.7530864197530864, 'tp_div(1)': 61, 'fp_div(1)': 7, 'fn_div(1)': 33, 'BC(1)': 0.7530864197530864, 'tp_div(2)': 61, 'fp_div(2)': 7, 'fn_div(2)': 33, 'BC(2)': 0.7530864197530864, 'tp_div(3)': 61, 'fp_div(3)': 7, 'fn_div(3)': 33, 'BC(3)': 0.7530864197530864, 'BIO(0)': 0.8119021052593618, 'BIO(1)': 0.8119021052593618, 'BIO(2)': 0.8119021052593618, 'BIO(3)': 0.8119021052593618, 'OP_CLB(0)': 0.8916436478177211, 'OP_CLB(1)': 0.8916436478177211, 'OP_CLB(2)': 0.8916436478177211, 'OP_CLB(3)': 0.8916436478177211, 'TP': 8545, 'FP': 186, 'FN': 94, 'IDSW': 32, 'MULTI-ASSIGNMENTS': 30, 'Precision': 0.9786965983277975, 'Recall': 0.9891191110082186, 'IDP': 0.8645057839880884, 'IDR': 0.8737122352124088, 'IDTP': 7548.0, 'IDFP': 1183.0, 'IDFN': 1091.0, 'MT': 0.9471698113207547, 'ML': 0.0, 'Frames': 92}  done!
+Valid: 1.0
+CHOTA: 0.90637
+BC: N/A
+CT: 0.58891
+CCA: 0.94643
+TF: 0.95918
+SEG: 0.85532
+TRA: 0.98344
+DET: 0.98523
+MOTA: 0.96041
+HOTA: 0.90464
+IDF1: 0.86908
+MTML: N/A
+FAF: 2.3478
+LNK: 0.97139
+OP_CTB: 0.91938
+OP_CSB: 0.92027
+BIO: N/A
+OP_CLB: N/A
+AOGM: 1643.5
+AOGM_0: 9.9233e+04
+AOGM_NS: 30.0
+AOGM_FN: 94.0
+AOGM_FP: 186.0
+AOGM_ED: 12.0
+AOGM_EA: 213.0
+AOGM_EC: 36.0
+gt_divisions: 94.0
+tp_div(0): 61.0
+fp_div(0): 7.0
+fn_div(0): 33.0
+BC(0): 0.75309
+tp_div(1): 61.0
+fp_div(1): 7.0
+fn_div(1): 33.0
+BC(1): 0.75309
+tp_div(2): 61.0
+fp_div(2): 7.0
+fn_div(2): 33.0
+BC(2): 0.75309
+tp_div(3): 61.0
+fp_div(3): 7.0
+fn_div(3): 33.0
+BC(3): 0.75309
+BIO(0): 0.8119
+BIO(1): 0.8119
+BIO(2): 0.8119
+BIO(3): 0.8119
+OP_CLB(0): 0.89164
+OP_CLB(1): 0.89164
+OP_CLB(2): 0.89164
+OP_CLB(3): 0.89164
+TP: 8545.0
+FP: 186.0
+FN: 94.0
+IDSW: 32.0
+MULTI-ASSIGNMENTS: 30.0
+Precision: 0.9787
+Recall: 0.98912
+IDP: 0.86451
+IDR: 0.87371
+IDTP: 7548.0
+IDFP: 1183.0
+IDFN: 1091.0
+MT: 0.94717
+ML: 0.0
+Frames: 92.0
+ /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa/02_RESValid: 1.0
+Evaluate sequence:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa/02_RES  with ground truth:  /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DL-HeLa/02_GTwith results:  {'Valid': 1, 'CHOTA': 0.891343081817018, 'BC': None, 'CT': 0.4572680788897005, 'CCA': 0.8471395881006865, 'TF': 0.942174550600903, 'SEG': 0.881929181842924, 'TRA': 0.987756549021757, 'DET': 0.9896026750590087, 'MOTA': 0.9375295043273013, 'HOTA': 0.893091362637299, 'IDF1': 0.8696773696773696, 'MTML': None, 'FAF': 13.923913043478262, 'LNK': 0.9753258105530833, 'OP_CTB': 0.9348428654323405, 'OP_CSB': 0.9357659284509663, 'BIO': None, 'OP_CLB': None, 'AOGM': 3574.5, 'AOGM_0': 291952.0, 'AOGM_NS': 65, 'AOGM_FN': 110, 'AOGM_FP': 1218, 'AOGM_ED': 66, 'AOGM_EA': 507, 'AOGM_EC': 105, 'gt_divisions': 209, 'tp_div(0)': 123, 'fp_div(0)': 57, 'fn_div(0)': 86, 'BC(0)': 0.6323907455012853, 'tp_div(1)': 130, 'fp_div(1)': 50, 'fn_div(1)': 79, 'BC(1)': 0.6683804627249357, 'tp_div(2)': 131, 'fp_div(2)': 49, 'fn_div(2)': 78, 'BC(2)': 0.6735218508997429, 'tp_div(3)': 131, 'fp_div(3)': 49, 'fn_div(3)': 78, 'BC(3)': 0.6735218508997429, 'BIO(0)': 0.7197432407731439, 'BIO(1)': 0.7287406700790564, 'BIO(2)': 0.7300260171227582, 'BIO(3)': 0.7300260171227582, 'OP_CLB(0)': 0.8475345256631136, 'OP_CLB(1)': 0.8520332403160699, 'OP_CLB(2)': 0.8526759138379207, 'OP_CLB(3)': 0.8526759138379207, 'TP': 25310, 'FP': 1218, 'FN': 110, 'IDSW': 195, 'MULTI-ASSIGNMENTS': 65, 'Precision': 0.9540862484921593, 'Recall': 0.9956726986624705, 'IDP': 0.8515153799758746, 'IDR': 0.888630999213218, 'IDTP': 22589.0, 'IDFP': 3939.0, 'IDFN': 2831.0, 'MT': 0.9344262295081968, 'ML': 0.0, 'Frames': 92}  done!
+Valid: 1.0
+CHOTA: 0.89134
+BC: N/A
+CT: 0.45727
+CCA: 0.84714
+TF: 0.94217
+SEG: 0.88193
+TRA: 0.98776
+DET: 0.9896
+MOTA: 0.93753
+HOTA: 0.89309
+IDF1: 0.86968
+MTML: N/A
+FAF: 13.924
+LNK: 0.97533
+OP_CTB: 0.93484
+OP_CSB: 0.93577
+BIO: N/A
+OP_CLB: N/A
+AOGM: 3574.5
+AOGM_0: 2.9195e+05
+AOGM_NS: 65.0
+AOGM_FN: 110.0
+AOGM_FP: 1218.0
+AOGM_ED: 66.0
+AOGM_EA: 507.0
+AOGM_EC: 105.0
+gt_divisions: 209.0
+tp_div(0): 123.0
+fp_div(0): 57.0
+fn_div(0): 86.0
+BC(0): 0.63239
+tp_div(1): 130.0
+fp_div(1): 50.0
+fn_div(1): 79.0
+BC(1): 0.66838
+tp_div(2): 131.0
+fp_div(2): 49.0
+fn_div(2): 78.0
+BC(2): 0.67352
+tp_div(3): 131.0
+fp_div(3): 49.0
+fn_div(3): 78.0
+BC(3): 0.67352
+BIO(0): 0.71974
+BIO(1): 0.72874
+BIO(2): 0.73003
+BIO(3): 0.73003
+OP_CLB(0): 0.84753
+OP_CLB(1): 0.85203
+OP_CLB(2): 0.85268
+OP_CLB(3): 0.85268
+TP: 2.531e+04
+FP: 1218.0
+FN: 110.0
+IDSW: 195.0
+MULTI-ASSIGNMENTS: 65.0
+Precision: 0.95409
+Recall: 0.99567
+IDP: 0.85152
+IDR: 0.88863
+IDTP: 2.2589e+04
+IDFP: 3939.0
+IDFN: 2831.0
+MT: 0.93443
+ML: 0.0
+Frames: 92.0
+
+== Fluo-N2DL-HeLa segmentation (OP_CSB = 0.5*(DET+SEG)) ==
+  (no SEG/DET/TRA columns in /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa_01_SEG_DET.csv; columns are: ['DET;SEG;OP_CSB'])
+  01: 
+  (no SEG/DET/TRA columns in /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa_02_SEG_DET.csv; columns are: ['DET;SEG;OP_CSB'])
+  02: 
+
+== Fluo-N2DL-HeLa tracking (OP_CTB = 0.5*(SEG+TRA)) ==
+  (no SEG/DET/TRA columns in /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa_01_tracking_metrics.csv; columns are: ['Valid;CHOTA;BC;CT;CCA;TF;SEG;TRA;DET;MOTA;HOTA;IDF1;MTML;FAF;LNK;OP_CTB;OP_CSB;BIO;OP_CLB;AOGM;AOGM_0;AOGM_NS;AOGM_FN;AOGM_FP;AOGM_ED;AOGM_EA;AOGM_EC;gt_divisions;tp_div(0);fp_div(0);fn_div(0);BC(0);tp_div(1);fp_div(1);fn_div(1);BC(1);tp_div(2);fp_div(2);fn_div(2);BC(2);tp_div(3);fp_div(3);fn_div(3);BC(3);BIO(0);BIO(1);BIO(2);BIO(3);OP_CLB(0);OP_CLB(1);OP_CLB(2);OP_CLB(3);TP;FP;FN;IDSW;MULTI-ASSIGNMENTS;Precision;Recall;IDP;IDR;IDTP;IDFP;IDFN;MT;ML;Frames'])
+  01: 
+  (no SEG/DET/TRA columns in /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa_02_tracking_metrics.csv; columns are: ['Valid;CHOTA;BC;CT;CCA;TF;SEG;TRA;DET;MOTA;HOTA;IDF1;MTML;FAF;LNK;OP_CTB;OP_CSB;BIO;OP_CLB;AOGM;AOGM_0;AOGM_NS;AOGM_FN;AOGM_FP;AOGM_ED;AOGM_EA;AOGM_EC;gt_divisions;tp_div(0);fp_div(0);fn_div(0);BC(0);tp_div(1);fp_div(1);fn_div(1);BC(1);tp_div(2);fp_div(2);fn_div(2);BC(2);tp_div(3);fp_div(3);fn_div(3);BC(3);BIO(0);BIO(1);BIO(2);BIO(3);OP_CLB(0);OP_CLB(1);OP_CLB(2);OP_CLB(3);TP;FP;FN;IDSW;MULTI-ASSIGNMENTS;Precision;Recall;IDP;IDR;IDTP;IDFP;IDFN;MT;ML;Frames'])
+  02: 
+Done

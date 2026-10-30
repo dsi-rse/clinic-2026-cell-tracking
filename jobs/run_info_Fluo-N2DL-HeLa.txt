@@ -1,0 +1,84 @@
+##### dataset / settings
+dataset=Fluo-N2DL-HeLa th_seed=0.35 th_cell=0.07 scale=1 batch=16 fuse_z_seeds=0 artifact_correction=0
+collected: Tue Oct 27 09:25:11 PM CDT 2026  host: fe01
+
+##### repository commits
+clinic:       cbb8e236039397f4a613d6cd5abdd6f5f3dc48c0 (issue-2-KIT-GE-3-setup)
+segmentation: 318eca78419bdf4a9bcbf1bf579db9ff0854daa8
+tracking:     293cbb73cd080ea5d64ffcb7169dbbc734d66b3a
+
+##### model
+5b160306bf97b5fdf3f0291c36ad4edfd89be28b74876deeffe290aeec150244  /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/models/kit-sch-ge/Fluo-N2DL-HeLa_GT+ST_model.pth
+best_settings: {'th_cell': 0.07, 'th_seed': 0.35, 'scale_factor': 1, 'apply_clahe': False, 'OP_CSB': 0.93022275}
+
+##### data
+01: 92 frames, 28 SEG GT files, 92 TRA GT files
+    SEG GT examples: man_seg012.tif man_seg013.tif man_seg014.tif 
+02: 92 frames, 8 SEG GT files, 92 TRA GT files
+    SEG GT examples: man_seg023.tif man_seg035.tif man_seg036.tif 
+archive Fluo-N2DL-HeLa.zip not found (deleted after download)
+
+##### environments
+segmentation env: python 3.10.13 | torch 2.1.2+cu121 | numpy 1.23.5 | tifffile 2021.11.2
+py-ctcmetrics Version: 1.3.3
+tracking env: python 3.8.20 | numpy 1.23.5 | gurobipy (11, 0, 3) | tifffile 2021.1.14
+
+##### jobs (sacct)
+JobID                               JobName      State ExitCode               Start    Elapsed        NodeList                                                    AllocTRES     MaxRSS 
+------------ ------------------------------ ---------- -------- ------------------- ---------- --------------- ------------------------------------------------------------ ---------- 
+2259586                  seg-Fluo-N2DL-HeLa  COMPLETED      0:0 2026-10-27T20:45:43   00:05:14            g004                   billing=21,cpu=8,gres/gpu=1,mem=64G,node=1            
+2259586.bat+                          batch  COMPLETED      0:0 2026-10-27T20:45:43   00:05:14            g004                              cpu=8,gres/gpu=1,mem=64G,node=1   2821304K 
+2259586.ext+                         extern  COMPLETED      0:0 2026-10-27T20:45:43   00:05:14            g004                   billing=21,cpu=8,gres/gpu=1,mem=64G,node=1          0 
+2259587                track-Fluo-N2DL-HeLa  COMPLETED      0:0 2026-10-27T20:51:30   00:04:25            h002                              billing=11,cpu=8,mem=64G,node=1            
+2259587.bat+                          batch  COMPLETED      0:0 2026-10-27T20:51:30   00:04:25            h002                                         cpu=8,mem=64G,node=1   1139004K 
+2259587.ext+                         extern  COMPLETED      0:0 2026-10-27T20:51:30   00:04:25            h002                              billing=11,cpu=8,mem=64G,node=1       256K 
+2259588              segeval-Fluo-N2DL-HeLa  COMPLETED      0:0 2026-10-27T20:51:30   00:01:58            g002                               billing=5,cpu=4,mem=32G,node=1            
+2259588.bat+                          batch  COMPLETED      0:0 2026-10-27T20:51:30   00:01:58            g002                                         cpu=4,mem=32G,node=1   2628560K 
+2259588.ext+                         extern  COMPLETED      0:0 2026-10-27T20:51:30   00:01:58            g002                               billing=5,cpu=4,mem=32G,node=1       256K 
+2259589            trackeval-Fluo-N2DL-HeLa  COMPLETED      0:0 2026-10-27T20:56:09   00:03:12         j004-ds                               billing=5,cpu=4,mem=32G,node=1            
+2259589.bat+                          batch  COMPLETED      0:0 2026-10-27T20:56:09   00:03:12         j004-ds                                         cpu=4,mem=32G,node=1   1321860K 
+2259589.ext+                         extern  COMPLETED      0:0 2026-10-27T20:56:09   00:03:12         j004-ds                               billing=5,cpu=4,mem=32G,node=1          0 
+
+##### job logs for these IDs (in /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/jobs)
+./seg-Fluo-N2DL-HeLa_2259586.out
+./track-Fluo-N2DL-HeLa_2259587.out
+./segeval-Fluo-N2DL-HeLa_2259588.out
+./trackeval-Fluo-N2DL-HeLa_2259589.out
+
+##### outputs
+segmentation 01: 92 files in /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DL-HeLa/01_RES_Fluo-N2DL-HeLa_GT+ST_model_0.35_0.07
+tracking     01: 93 files in /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa/01_RES
+segmentation 02: 92 files in /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DL-HeLa/02_RES_Fluo-N2DL-HeLa_GT+ST_model_0.35_0.07
+tracking     02: 93 files in /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa/02_RES
+
+##### score CSVs
+--- /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa_01_SEG_DET.csv
+DET;SEG;OP_CSB
+0.9844773700659799;0.8557989791593482;0.920138174612664
+
+--- /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa_02_SEG_DET.csv
+DET;SEG;OP_CSB
+0.9892250196695516;0.8867428521106633;0.9379839358901074
+
+--- /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa_01_tracking_metrics.csv
+Valid;CHOTA;BC;CT;CCA;TF;SEG;TRA;DET;MOTA;HOTA;IDF1;MTML;FAF;LNK;OP_CTB;OP_CSB;BIO;OP_CLB;AOGM;AOGM_0;AOGM_NS;AOGM_FN;AOGM_FP;AOGM_ED;AOGM_EA;AOGM_EC;gt_divisions;tp_div(0);fp_div(0);fn_div(0);BC(0);tp_div(1);fp_div(1);fn_div(1);BC(1);tp_div(2);fp_div(2);fn_div(2);BC(2);tp_div(3);fp_div(3);fn_div(3);BC(3);BIO(0);BIO(1);BIO(2);BIO(3);OP_CLB(0);OP_CLB(1);OP_CLB(2);OP_CLB(3);TP;FP;FN;IDSW;MULTI-ASSIGNMENTS;Precision;Recall;IDP;IDR;IDTP;IDFP;IDFN;MT;ML;Frames
+1;0.9063684330286387;None;0.5889101338432122;0.9464285714285714;0.9591832960125777;0.8553199428830528;0.9834379692239477;0.9852297719643477;0.9604120847320292;0.9046438634618118;0.8690846286701209;None;2.347826086956522;0.9713851903760804;0.9193789560535002;0.9202748574237003;None;None;1643.5;99233.0;30;94;186;12;213;36;94;61;7;33;0.7530864197530864;61;7;33;0.7530864197530864;61;7;33;0.7530864197530864;61;7;33;0.7530864197530864;0.8119021052593618;0.8119021052593618;0.8119021052593618;0.8119021052593618;0.8916436478177211;0.8916436478177211;0.8916436478177211;0.8916436478177211;8545;186;94;32;30;0.9786965983277975;0.9891191110082186;0.8645057839880884;0.8737122352124088;7548.0;1183.0;1091.0;0.9471698113207547;0.0;92
+
+--- /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa_02_tracking_metrics.csv
+Valid;CHOTA;BC;CT;CCA;TF;SEG;TRA;DET;MOTA;HOTA;IDF1;MTML;FAF;LNK;OP_CTB;OP_CSB;BIO;OP_CLB;AOGM;AOGM_0;AOGM_NS;AOGM_FN;AOGM_FP;AOGM_ED;AOGM_EA;AOGM_EC;gt_divisions;tp_div(0);fp_div(0);fn_div(0);BC(0);tp_div(1);fp_div(1);fn_div(1);BC(1);tp_div(2);fp_div(2);fn_div(2);BC(2);tp_div(3);fp_div(3);fn_div(3);BC(3);BIO(0);BIO(1);BIO(2);BIO(3);OP_CLB(0);OP_CLB(1);OP_CLB(2);OP_CLB(3);TP;FP;FN;IDSW;MULTI-ASSIGNMENTS;Precision;Recall;IDP;IDR;IDTP;IDFP;IDFN;MT;ML;Frames
+1;0.891343081817018;None;0.4572680788897005;0.8471395881006865;0.942174550600903;0.881929181842924;0.987756549021757;0.9896026750590087;0.9375295043273013;0.893091362637299;0.8696773696773696;None;13.923913043478262;0.9753258105530833;0.9348428654323405;0.9357659284509663;None;None;3574.5;291952.0;65;110;1218;66;507;105;209;123;57;86;0.6323907455012853;130;50;79;0.6683804627249357;131;49;78;0.6735218508997429;131;49;78;0.6735218508997429;0.7197432407731439;0.7287406700790564;0.7300260171227582;0.7300260171227582;0.8475345256631136;0.8520332403160699;0.8526759138379207;0.8526759138379207;25310;1218;110;195;65;0.9540862484921593;0.9956726986624705;0.8515153799758746;0.888630999213218;22589.0;3939.0;2831.0;0.9344262295081968;0.0;92
+
+
+##### summary
+
+== Fluo-N2DL-HeLa segmentation (OP_CSB = 0.5*(DET+SEG)) ==
+  (no SEG/DET/TRA columns in /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa_01_SEG_DET.csv; columns are: ['DET;SEG;OP_CSB'])
+  01: 
+  (no SEG/DET/TRA columns in /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa_02_SEG_DET.csv; columns are: ['DET;SEG;OP_CSB'])
+  02: 
+
+== Fluo-N2DL-HeLa tracking (OP_CTB = 0.5*(SEG+TRA)) ==
+  (no SEG/DET/TRA columns in /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa_01_tracking_metrics.csv; columns are: ['Valid;CHOTA;BC;CT;CCA;TF;SEG;TRA;DET;MOTA;HOTA;IDF1;MTML;FAF;LNK;OP_CTB;OP_CSB;BIO;OP_CLB;AOGM;AOGM_0;AOGM_NS;AOGM_FN;AOGM_FP;AOGM_ED;AOGM_EA;AOGM_EC;gt_divisions;tp_div(0);fp_div(0);fn_div(0);BC(0);tp_div(1);fp_div(1);fn_div(1);BC(1);tp_div(2);fp_div(2);fn_div(2);BC(2);tp_div(3);fp_div(3);fn_div(3);BC(3);BIO(0);BIO(1);BIO(2);BIO(3);OP_CLB(0);OP_CLB(1);OP_CLB(2);OP_CLB(3);TP;FP;FN;IDSW;MULTI-ASSIGNMENTS;Precision;Recall;IDP;IDR;IDTP;IDFP;IDFN;MT;ML;Frames'])
+  01: 
+  (no SEG/DET/TRA columns in /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa_02_tracking_metrics.csv; columns are: ['Valid;CHOTA;BC;CT;CCA;TF;SEG;TRA;DET;MOTA;HOTA;IDF1;MTML;FAF;LNK;OP_CTB;OP_CSB;BIO;OP_CLB;AOGM;AOGM_0;AOGM_NS;AOGM_FN;AOGM_FP;AOGM_ED;AOGM_EA;AOGM_EC;gt_divisions;tp_div(0);fp_div(0);fn_div(0);BC(0);tp_div(1);fp_div(1);fn_div(1);BC(1);tp_div(2);fp_div(2);fn_div(2);BC(2);tp_div(3);fp_div(3);fn_div(3);BC(3);BIO(0);BIO(1);BIO(2);BIO(3);OP_CLB(0);OP_CLB(1);OP_CLB(2);OP_CLB(3);TP;FP;FN;IDSW;MULTI-ASSIGNMENTS;Precision;Recall;IDP;IDR;IDTP;IDFP;IDFN;MT;ML;Frames'])
+  02: 
