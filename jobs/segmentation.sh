@@ -21,6 +21,7 @@ if [ "$AC" = 1 ]; then EXTRA+=(--artifact_correction); fi
 
 echo "job: ${SLURM_JOB_ID:-local}  node: $(hostname)  start: $(date)"
 nvidia-smi --query-gpu=name,memory.total --format=csv || true
-"$SEG_PY" -u "$JOBS_DIR/segment_only.py" --seg_repo "$SEG_REPO" --ds "$DS" \
+"$SEG_PY" -u "$SCRIPTS_DIR/segment_only.py" --seg_repo "$SEG_REPO" --ds "$DS" \
+    --data_dir "$DATA_ROOT" --model_dir "$MODEL_DIR" --out_dir "$SEG_RES" \
     --th_seed "$TH_SEED" --th_cell "$TH_CELL" --scale "$SCALE" --batch_size "$BS" "${EXTRA[@]}"
 echo "end: $(date)"

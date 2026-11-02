@@ -1,19 +1,19 @@
 """Segment CTC training sequences with a pretrained KIT-GE (3) model, without eval.py's scoring.
-
+ 
 Uses the same segmentation functions and post-processing settings as the repository's eval.py
-
+ 
 Example:
     python segment_only.py --seg_repo /path/to/KIT-GE-3-Cell-Segmentation-for-CTC \
         --ds Fluo-N2DL-HeLa --th_seed 0.35 --th_cell 0.07
 """
-
+ 
 import argparse
 import json
 import os
 import sys
 from pathlib import Path
-
-
+ 
+ 
 def parse_args():
     """Parse command-line arguments; --seg_repo falls back to the SEG_REPO environment variable."""
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -32,6 +32,10 @@ def parse_args():
     p.add_argument("--n_splitting", type=int, default=40)
     p.add_argument("--model_dir", help="default: <seg_repo>/models/kit-sch-ge")
     p.add_argument("--data_dir", help="default: <seg_repo>/training_data")
+    p.add_argument(
+        "--out_dir",
+        help="folder for the <seq>_RES_* results (default: <data_dir>/<ds>)",
+    )
     p.add_argument("--subsets", nargs="+", default=["01", "02"])
     a = p.parse_args()
     if not a.seg_repo:
@@ -41,20 +45,21 @@ def parse_args():
         Path(a.model_dir) if a.model_dir else a.seg_repo / "models" / "kit-sch-ge"
     )
     a.data_dir = Path(a.data_dir) if a.data_dir else a.seg_repo / "training_data"
+    a.out_dir = Path(a.out_dir) if a.out_dir else a.data_dir / a.ds
     return a
-
-
+ 
+ 
 def main():
     """Run segmentation on each requested training sequence."""
     a = parse_args()
     if not a.seg_repo.is_dir():
         sys.exit(f"Segmentation repository not found: {a.seg_repo}")
-
+ 
     sys.path.insert(0, str(a.seg_repo))
     import torch
     from eval import EvalArgs
     from segmentation.inference.inference import inference_2d_ctc, inference_3d_ctc
-
+ 
     model = a.model_dir / f"{a.ds}_GT+ST_model.pth"
     if not model.exists():
         sys.exit(f"Model not found: {model}")
@@ -70,26 +75,26 @@ def main():
         f"batch_size={a.batch_size}",
         flush=True,
     )
-
+ 
     if "2D" in a.ds:
         infer = inference_2d_ctc
     elif "3D" in a.ds:
         infer = inference_3d_ctc
     else:
         sys.exit("Dataset name must contain '2D' or '3D'")
-
+ 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device.type == "cuda":
         torch.backends.cudnn.benchmark = True
     print("Device:", device, flush=True)
-
+ 
     for subset in a.subsets:
         img_dir = a.data_dir / a.ds / subset
         n_imgs = len(list(img_dir.glob("t*.tif")))
         if n_imgs == 0:
             sys.exit(f"No images found in {img_dir}")
-        res = a.data_dir / a.ds / f"{subset}_RES_{model.stem}_{a.th_seed}_{a.th_cell}"
-        res.mkdir(exist_ok=True)
+        res = a.out_dir / f"{subset}_RES_{model.stem}_{a.th_seed}_{a.th_cell}"
+        res.mkdir(parents=True, exist_ok=True)
         if len(list(res.glob("mask*.tif"))) == n_imgs:
             print(f"{subset}: already segmented ({n_imgs} masks), skipping", flush=True)
             continue
@@ -116,7 +121,7 @@ def main():
             num_gpus=1,
         )
     print("Done", flush=True)
-
-
+ 
+ 
 if __name__ == "__main__":
     main()

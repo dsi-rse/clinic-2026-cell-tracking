@@ -6,14 +6,25 @@
 #SBATCH --time=00:30:00
 #SBATCH --output=%x_%j.out
 set -e
-source /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/jobs/datasets.sh "${1:?usage: sbatch seg_eval.sh <dataset>}"
+JOBS_DIR=${JOBS_DIR:-$SLURM_SUBMIT_DIR}
+if [ ! -f "$JOBS_DIR/datasets.sh" ]; then
+  echo "datasets.sh not found in JOBS_DIR=$JOBS_DIR. Submit from the jobs/ folder or export JOBS_DIR." >&2
+  exit 1
+fi
+source "$JOBS_DIR/datasets.sh" "${1:?usage: sbatch seg_eval.sh <dataset>}"
 
-mkdir -p "$SEG_EVAL_DIR"
+mkdir -p "$SEG_METRICS"
 for SEQ in 01 02; do
-  "$SEG_PY" "$JOBS_DIR/seg_to_tracks.py" "$DATA/${SEQ}_RES_$TAG" "$SEGEVAL_OUT/${SEQ}_RES"
+  "$SEG_PY" "$SCRIPTS_DIR/seg_to_tracks.py" "$SEG_RES/${SEQ}_RES_$TAG" "$SEGEVAL_OUT/${SEQ}_RES"
   "$CTC_EVALUATE" --gt "$DATA/${SEQ}_GT" --res "$SEGEVAL_OUT/${SEQ}_RES" --det --seg \
-      --csv-file "$SEG_EVAL_DIR/${DS}_${SEQ}_SEG_DET.csv"
+      -n "${SLURM_CPUS_PER_TASK:-4}" \
+      --csv-file "$SEG_METRICS/${DS}_${SEQ}_SEG_DET.csv"
+  if compgen -G "$DATA/${SEQ}_GT/SEG/man_seg_*_*.tif" > /dev/null; then
+    "$SEG_PY" "$SCRIPTS_DIR/seg_3d_check.py" "$DATA/${SEQ}_GT" "$SEG_RES/${SEQ}_RES_$TAG" \
+        | tee "$SEG_METRICS/${DS}_${SEQ}_SEG_3d_check.txt" \
+        || echo "seg_3d_check.py failed for $SEQ (see above)" >&2
+  fi
 done
-"$SEG_PY" "$JOBS_DIR/summarize_scores.py" "$DS" --seg_eval_dir "$SEG_EVAL_DIR" --track_dir "$TRACK_DIR" || true
+"$SEG_PY" "$SCRIPTS_DIR/summarize_scores.py" "$DS" --seg_eval_dir "$SEG_METRICS" --track_dir "$TRACK_METRICS" || true
 
 echo "Done"

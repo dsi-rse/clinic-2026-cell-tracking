@@ -11,8 +11,10 @@ TRK_REPO=${TRK_REPO:-$REPO_ROOT/external/KIT-GE-3-Cell-Tracking-for-CTC}
 SEG_ENV=${SEG_ENV:-$SEG_REPO/env}
 TRK_ENV=${TRK_ENV:-$HOME/.conda/envs/tracking_env}
 
-SEG_EVAL_DIR=${SEG_EVAL_DIR:-$REPO_ROOT/seg_eval}
-TRACK_DIR=${TRACK_DIR:-$REPO_ROOT/tracking_results}
+DATA_ROOT=${DATA_ROOT:-$SEG_REPO/training_data}
+MODEL_DIR=${MODEL_DIR:-$SEG_REPO/models/kit-sch-ge}
+RESULTS_DIR=${RESULTS_DIR:-$REPO_ROOT/results}
+SCRIPTS_DIR=${SCRIPTS_DIR:-$REPO_ROOT/scripts/kit-ge-3}
 
 export GRB_LICENSE_FILE=${GRB_LICENSE_FILE:-$HOME/gurobi.lic}
 
@@ -22,7 +24,7 @@ CTC_EVALUATE=$SEG_ENV/bin/ctc_evaluate
 CTC_VALIDATE=$SEG_ENV/bin/ctc_validate
 
 # A warning for paths that don't exist
-for p in "$SEG_REPO" "$TRK_REPO" "$SEG_ENV" "$TRK_ENV"; do
+for p in "$SCRIPTS_DIR" "$SEG_REPO" "$TRK_REPO" "$SEG_ENV" "$TRK_ENV" "$DATA_ROOT" "$MODEL_DIR"; do
   if [ ! -e "$p" ]; then
     echo "WARNING: $p does not exist. Export the matching variable (see datasets.sh)." >&2
   fi
@@ -43,6 +45,9 @@ esac
 DS=$1
 MODEL_NAME=${DS}_GT+ST_model
 TAG=${MODEL_NAME}_${TH_SEED}_${TH_CELL}
-DATA=$SEG_REPO/training_data/$DS
-SEGEVAL_OUT=$SEG_EVAL_DIR/$DS
-TRACK_OUT=$TRACK_DIR/$DS
+DATA=$DATA_ROOT/$DS
+SEG_RES=$RESULTS_DIR/$DS/segmentation
+SEG_METRICS=$SEG_RES/metrics
+SEGEVAL_OUT=$SEG_RES/det_input
+TRACK_OUT=$RESULTS_DIR/$DS/tracking
+TRACK_METRICS=$TRACK_OUT/metrics

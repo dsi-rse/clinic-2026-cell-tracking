@@ -6,12 +6,17 @@
 #SBATCH --time=00:45:00
 #SBATCH --output=%x_%j.out
 set -e
-source /net/scratch/evt-kit-ge/clinic-2026-cell-tracking/jobs/datasets.sh "${1:?usage: sbatch track.sh <dataset>}"
-
+JOBS_DIR=${JOBS_DIR:-$SLURM_SUBMIT_DIR}
+if [ ! -f "$JOBS_DIR/datasets.sh" ]; then
+  echo "datasets.sh not found in JOBS_DIR=$JOBS_DIR. Submit from the jobs/ folder or export JOBS_DIR." >&2
+  exit 1
+fi
+source "$JOBS_DIR/datasets.sh" "${1:?usage: sbatch track.sh <dataset>}"
+ 
 cd "$TRK_REPO"
 for SEQ in 01 02; do
   "$TRK_PY" -u -m run_tracking --image_path "$DATA/$SEQ" \
-      --segmentation_path "$DATA/${SEQ}_RES_$TAG" --results_path "$TRACK_OUT/${SEQ}_RES"
+      --segmentation_path "$SEG_RES/${SEQ}_RES_$TAG" --results_path "$TRACK_OUT/${SEQ}_RES"
 done
-
+ 
 echo "Done"
