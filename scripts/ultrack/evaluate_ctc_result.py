@@ -9,8 +9,9 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
+from cell_tracking.ctc_io import extract_frame_number
+
 RESULT_DIRECTORY_PATTERN = re.compile(r"^(?P<sequence>\d+)_RES$")
-FRAME_NUMBER_PATTERN = re.compile(r"(\d+)$")
 REPORTED_METRICS = ("Valid", "DET", "SEG", "TRA", "OP_CTB")
 
 
@@ -74,14 +75,6 @@ def parse_args() -> argparse.Namespace:
         help="Optional published CTB value for comparison.",
     )
     return parser.parse_args()
-
-
-def extract_frame_number(path: Path) -> int:
-    """Extract the trailing frame number from a CTC mask filename."""
-    match = FRAME_NUMBER_PATTERN.search(path.stem)
-    if match is None:
-        raise ValueError(f"Could not read a frame number from {path.name}.")
-    return int(match.group(1))
 
 
 def validate_directory_structure(
