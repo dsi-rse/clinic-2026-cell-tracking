@@ -1,4 +1,8 @@
-"""Reusable loading and tracking of saved 3D instance-label sequences."""
+"""Load saved 3D instance labels and run the Ultrack tracking pipeline.
+
+Used by scripts/ultrack/track_3d_labels.py, including Cellpose-generated masks.
+The tracking and export functions in this module are specific to Ultrack.
+"""
 
 from pathlib import Path
 

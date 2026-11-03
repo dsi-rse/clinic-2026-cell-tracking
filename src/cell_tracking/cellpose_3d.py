@@ -1,4 +1,8 @@
-"""Prepare single-channel CTC volumes and save Cellpose inspection figures."""
+"""Prepare Cellpose 3D inputs and previews for the Ultrack experiment workflow.
+
+Used by scripts/ultrack/run_3d_cellpose.py to generate segmentation inputs for
+Ultrack. This module performs preprocessing and visualization, not tracking.
+"""
 
 from pathlib import Path
 

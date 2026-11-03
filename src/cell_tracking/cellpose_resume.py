@@ -1,4 +1,9 @@
-"""Small checkpoint helpers for restarting frame-by-frame Cellpose runs."""
+"""Checkpoint helpers for Cellpose segmentation in the Ultrack workflow.
+
+Used by the 3D Cellpose runner and the 2D segmentation-parameter runner under
+scripts/ultrack. These checkpoints cover saved segmentation masks, not the
+Ultrack solver state.
+"""
 
 import json
 from pathlib import Path

@@ -1,6 +1,9 @@
 # Ultrack experiment results
 
 This document records completed Ultrack experiments and their interpretation.
+For follow-up preprocessing and sensitivity experiments, see
+[Ultrack parameter analysis](ultrack-parameter-analysis.md), including plain
+and hole-filled watershed comparisons on GOWT1.
 It is separate from
 [`ultrack-reproducibility.md`](ultrack-reproducibility.md), which documents how
 to recreate the environments, workflows, and evaluations.

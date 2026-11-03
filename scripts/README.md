@@ -1,5 +1,10 @@
 # Scripts
 
+`ultrack/run_segmentation_parameters.py` runs explicit 2D parameter experiments in
+generation, tracking, and evaluation stages, with resume support. See the
+[runner guide](../docs/ultrack/segmentation-parameter-runner.md) for environment-specific
+commands and plan generation for HeLa and GOWT1.
+
 ## Watershed hole-filling comparison
 
 `ultrack/run_2d_benchmark.py --method watershed --watershed-fill-holes`
