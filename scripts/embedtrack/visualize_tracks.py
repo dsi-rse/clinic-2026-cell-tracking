@@ -4,15 +4,14 @@ Writes one PNG per frame (cell outlines coloured by track id, plus a short tail
 showing where each cell has been), an animated GIF, and one image with the full
 trajectory of every track.
 
-Example:
-    python visualize_tracks.py \
-        --raw ~/cls_2d/CLS_tneon_MAX/01 \
-        --res external/EmbedTrack/results/CLS_tneon_MAX/KIT-Loe-GE_model-Fluo-N2DH-GOWT1/train/01_RES \
-        --out ~/viz/cls_01
+Example (from the repository root):
+    PYTHONPATH=src python scripts/embedtrack/visualize_tracks.py \
+        --raw /net/spaces/clinic/CLS/DSC_CTC/ctc/Fluo-N2DL-HeLa/02 \
+        --res external/EmbedTrack/results/Fluo-N2DL-HeLa/KIT-Loe-GE/train/02_RES \
+        --out ~/viz/hela_02
 """
 
 import argparse
-import colorsys
 from pathlib import Path
 
 import matplotlib
@@ -22,49 +21,34 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tifffile
 from PIL import Image
-from scipy import ndimage
+
+from cell_tracking.ctc_io import extract_frame_number
+from cell_tracking.ctc_visualization import normalize_raw_image
+from cell_tracking.track_utils import RGB_MAXIMUM, label_centroids, track_color
+from cell_tracking.ultrack_2d import find_label_boundaries
 
 MIN_TAIL_POINTS = 2
 
 
-def track_color(track_id):
-    """A bright colour that is the same for a given track id in every frame."""
-    hue = (track_id * 0.61803398875) % 1.0
-    return colorsys.hsv_to_rgb(hue, 0.85, 1.0)
-
-
-def outlines(mask):
-    """Boolean image that is True on the one-pixel border of every labelled cell."""
-    edge = np.zeros(mask.shape, dtype=bool)
-    for axis in (0, 1):
-        for shift in (1, -1):
-            edge |= mask != np.roll(mask, shift, axis)
-    return edge & (mask > 0)
-
-
-def centroids(mask):
-    """Map track id -> (y, x) centre of mass for one label image."""
-    ids = np.unique(mask)
-    ids = ids[ids > 0]
-    if len(ids) == 0:
-        return {}
-    centres = ndimage.center_of_mass(mask > 0, mask, ids)
-    return {int(i): (float(y), float(x)) for i, (y, x) in zip(ids, centres)}
-
-
-def scale_image(img):
-    """Stretch the 1st to 99.5th intensity percentile to 0..1 for display."""
-    lo, hi = np.percentile(img, (1, 99.5))
-    return np.clip((img.astype(float) - lo) / max(hi - lo, 1e-9), 0, 1)
+def plot_color(track_id):
+    """Return the track colour as matplotlib RGB floats (0..1)."""
+    return tuple(channel / RGB_MAXIMUM for channel in track_color(track_id))
 
 
 def new_axes(shape, dpi):
-    """A figure with one axes that fills it, sized to the image."""
+    """Return a figure with one axes that fills it, sized to the image."""
     height, width = shape
     fig = plt.figure(figsize=(width / 100, height / 100), dpi=dpi)
     ax = fig.add_axes([0, 0, 1, 1])
     ax.axis("off")
     return fig, ax
+
+
+def show_raw(ax, raw):
+    """Draw a raw frame in greyscale on the axes."""
+    ax.imshow(
+        normalize_raw_image(raw), cmap="gray", vmin=0, vmax=255, interpolation="nearest"
+    )
 
 
 def main():
@@ -76,22 +60,14 @@ def main():
         "--raw", required=True, type=Path, help="folder with raw frames t000.tif, ..."
     )
     parser.add_argument(
-        "--res",
-        required=True,
-        type=Path,
-        help="folder with mask000.tif, ... (e.g. 01_RES)",
+        "--res", required=True, type=Path, help="folder with mask000.tif, ... (01_RES)"
     )
     parser.add_argument(
         "--out", required=True, type=Path, help="output folder (created)"
     )
+    parser.add_argument("--step", type=int, default=1, help="draw every Nth frame")
     parser.add_argument(
-        "--step", type=int, default=1, help="draw every Nth frame (default 1)"
-    )
-    parser.add_argument(
-        "--tail",
-        type=int,
-        default=10,
-        help="frames of history in each tail (default 10)",
+        "--tail", type=int, default=10, help="frames of history in each tail"
     )
     parser.add_argument(
         "--dpi", type=int, default=70, help="lower = smaller files (default 70)"
@@ -105,46 +81,38 @@ def main():
     frames_dir.mkdir(parents=True, exist_ok=True)
 
     # Pass 1: centroid of every track in every frame (for tails and trajectories).
-    history = {}  # track id -> {frame number: (y, x)}
+    history = {}  # track id -> {frame number: (x, y)}
     frame_numbers = []
     for path in mask_files:
-        n = int(path.stem.replace("mask", ""))
+        n = extract_frame_number(path)
         frame_numbers.append(n)
-        for track_id, centre in centroids(tifffile.imread(path)).items():
+        for track_id, centre in label_centroids(tifffile.imread(path)).items():
             history.setdefault(track_id, {})[n] = centre
 
     # Pass 2: one annotated PNG per frame.
     pngs = []
-    for path, n in list(zip(mask_files, frame_numbers))[:: args.step]:
+    for path, n in list(zip(mask_files, frame_numbers, strict=True))[:: args.step]:
         raw = tifffile.imread(args.raw / f"t{n:03d}.tif")
         mask = tifffile.imread(path)
         fig, ax = new_axes(mask.shape, args.dpi)
-        ax.imshow(scale_image(raw), cmap="gray", interpolation="nearest")
+        show_raw(ax, raw)
 
         lut = np.zeros((int(mask.max()) + 1, 4))
         for track_id in np.unique(mask[mask > 0]):
-            lut[track_id, :3] = track_color(int(track_id))
+            lut[track_id, :3] = plot_color(int(track_id))
         rgba = lut[mask]
-        rgba[..., 3] = outlines(mask)
+        rgba[..., 3] = find_label_boundaries(mask)
         ax.imshow(rgba, interpolation="nearest")
 
         for track_id in np.unique(mask[mask > 0]):
-            points = [
-                history[int(track_id)][t]
-                for t in range(n - args.tail, n + 1)
-                if t in history[int(track_id)]
-            ]
+            by_frame = history[int(track_id)]
+            points = [by_frame[t] for t in range(n - args.tail, n + 1) if t in by_frame]
             if len(points) >= MIN_TAIL_POINTS:
-                ys, xs = zip(*points)
-                ax.plot(xs, ys, color=track_color(int(track_id)), linewidth=1)
+                xs, ys = zip(*points, strict=True)
+                ax.plot(xs, ys, color=plot_color(int(track_id)), linewidth=1)
 
-        ax.text(
-            8,
-            22,
-            f"frame {n}   cells: {len(np.unique(mask[mask > 0]))}",
-            color="white",
-            fontsize=11,
-        )
+        count = len(np.unique(mask[mask > 0]))
+        ax.text(8, 22, f"frame {n}   cells: {count}", color="white", fontsize=11)
         png = frames_dir / f"frame_{n:03d}.png"
         fig.savefig(png, dpi=args.dpi)
         plt.close(fig)
@@ -157,18 +125,13 @@ def main():
     # One picture with every track's full path on the first frame.
     first = tifffile.imread(args.raw / f"t{frame_numbers[0]:03d}.tif")
     fig, ax = new_axes(first.shape, args.dpi)
-    ax.imshow(scale_image(first), cmap="gray", interpolation="nearest")
+    show_raw(ax, first)
     for track_id, by_frame in history.items():
-        ys, xs = zip(*[by_frame[t] for t in sorted(by_frame)])
-        ax.plot(xs, ys, color=track_color(track_id), linewidth=1)
-        ax.plot(xs[-1], ys[-1], "o", color=track_color(track_id), markersize=2)
-    ax.text(
-        8,
-        22,
-        f"{len(history)} tracks over {len(frame_numbers)} frames",
-        color="white",
-        fontsize=11,
-    )
+        xs, ys = zip(*[by_frame[t] for t in sorted(by_frame)], strict=True)
+        ax.plot(xs, ys, color=plot_color(track_id), linewidth=1)
+        ax.plot(xs[-1], ys[-1], "o", color=plot_color(track_id), markersize=2)
+    label = f"{len(history)} tracks over {len(frame_numbers)} frames"
+    ax.text(8, 22, label, color="white", fontsize=11)
     trajectories = args.out.expanduser() / "trajectories.png"
     fig.savefig(trajectories, dpi=args.dpi)
     plt.close(fig)

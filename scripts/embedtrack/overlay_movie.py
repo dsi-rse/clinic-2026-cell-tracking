@@ -5,73 +5,40 @@ filled with a translucent colour that belongs to its track id, and the path each
 track has taken so far is drawn as a line in the same colour. Writes an animated
 GIF and a few PNG frames.
 
-Example:
-    python overlay_movie.py \
+Example (from the repository root):
+    PYTHONPATH=src python scripts/embedtrack/overlay_movie.py \
         --raw /net/spaces/clinic/CLS/DSC_CTC/ctc/Fluo-N2DL-HeLa/02 \
         --res external/EmbedTrack/results/Fluo-N2DL-HeLa/KIT-Loe-GE/train/02_RES \
         --out ~/viz/hela_02_movie
 """
 
 import argparse
-import colorsys
-import re
 from pathlib import Path
 
 import numpy as np
 import tifffile
 from PIL import Image, ImageDraw
-from scipy import ndimage
+
+from cell_tracking.ctc_io import extract_frame_number
+from cell_tracking.ctc_visualization import normalize_raw_image
+from cell_tracking.track_utils import RGB_MAXIMUM, label_centroids, track_color
+from cell_tracking.ultrack_2d import find_label_boundaries
 
 MIN_POINTS = 2
 PNG_EVERY = 10
 
 
-def frame_number(path):
-    """Frame number taken from the digits at the end of a CTC file name."""
-    return int(re.search(r"(\d+)\.tif$", path.name).group(1))
-
-
-def track_color(track_id):
-    """A bright colour (0..255 RGB) that is the same for a track id in every frame."""
-    hue = (track_id * 0.61803398875) % 1.0
-    return tuple(int(255 * c) for c in colorsys.hsv_to_rgb(hue, 0.85, 1.0))
-
-
-def scale_image(img):
-    """Stretch the 1st to 99.5th intensity percentile to 0..1 for display."""
-    lo, hi = np.percentile(img, (1, 99.5))
-    return np.clip((img.astype(float) - lo) / max(hi - lo, 1e-9), 0, 1)
-
-
-def centroids(mask):
-    """Map track id -> (x, y) centre of mass for one label image."""
-    ids = np.unique(mask)
-    ids = ids[ids > 0]
-    if len(ids) == 0:
-        return {}
-    centres = ndimage.center_of_mass(mask > 0, mask, ids)
-    return {int(i): (float(x), float(y)) for i, (y, x) in zip(ids, centres)}
-
-
-def outlines(mask):
-    """Boolean image that is True on the one-pixel border of every labelled cell."""
-    edge = np.zeros(mask.shape, dtype=bool)
-    for axis in (0, 1):
-        for shift in (1, -1):
-            edge |= mask != np.roll(mask, shift, axis)
-    return edge & (mask > 0)
-
-
 def render(raw, mask, lut, alpha, outline):
-    """Greyscale raw frame with the cells of `mask` filled in translucent colour."""
-    rgb = np.stack([scale_image(raw)] * 3, axis=-1)
+    """Return the greyscale raw frame with the cells of `mask` in translucent colour."""
+    grey = normalize_raw_image(raw).astype(float) / RGB_MAXIMUM
+    rgb = np.stack([grey] * 3, axis=-1)
     cells = mask > 0
-    colours = lut[mask[cells]] / 255.0
+    colours = lut[mask[cells]] / RGB_MAXIMUM
     rgb[cells] = (1 - alpha) * rgb[cells] + alpha * colours
     if outline:
-        edge = outlines(mask)
-        rgb[edge] = lut[mask[edge]] / 255.0
-    return Image.fromarray((rgb * 255).astype(np.uint8))
+        edge = find_label_boundaries(mask)
+        rgb[edge] = lut[mask[edge]] / RGB_MAXIMUM
+    return Image.fromarray((rgb * RGB_MAXIMUM).astype(np.uint8))
 
 
 def draw_trajectories(img, history, frame, tail):
@@ -137,9 +104,9 @@ def main():
     history = {}
     masks = {}
     for path in mask_files:
-        n = frame_number(path)
+        n = extract_frame_number(path)
         masks[n] = tifffile.imread(path)
-        for track_id, centre in centroids(masks[n]).items():
+        for track_id, centre in label_centroids(masks[n]).items():
             history.setdefault(track_id, {})[n] = centre
     n_ids = max(int(m.max()) for m in masks.values()) + 1
     lut = np.array([track_color(i) for i in range(n_ids)], dtype=float)
@@ -151,9 +118,8 @@ def main():
         img = render(raw, masks[n], lut, args.alpha, args.outline)
         draw_trajectories(img, history, n, args.tail)
         count = len(np.unique(masks[n][masks[n] > 0]))
-        ImageDraw.Draw(img).text(
-            (8, 8), f"frame {n}   cells: {count}", fill=(255, 255, 255)
-        )
+        label = f"frame {n}   cells: {count}"
+        ImageDraw.Draw(img).text((8, 8), label, fill=(255, 255, 255))
         if img.width > args.width:
             height = round(img.height * args.width / img.width)
             img = img.resize((args.width, height), Image.LANCZOS)
