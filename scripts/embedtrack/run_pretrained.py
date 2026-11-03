@@ -37,9 +37,6 @@ def main():
     )
     parser.add_argument("--results-root", required=True, type=Path)
     parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument(
-        "--no-gt", action="store_true", help="data has no ground truth (<seq>_GT)"
-    )
     args = parser.parse_args()
 
     model_dir = args.models_root / args.model_dataset
@@ -68,7 +65,7 @@ def main():
     for seq in args.sequences:
         missing += [
             args.raw_root / args.dataset / seq,
-            *([] if args.no_gt else [args.raw_root / args.dataset / f"{seq}_GT"]),
+            args.raw_root / args.dataset / f"{seq}_GT",
         ]
     missing = [p for p in missing if not p.exists()]
     if missing:

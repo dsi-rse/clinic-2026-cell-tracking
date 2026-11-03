@@ -30,7 +30,7 @@ cd "$REPO_ROOT/external/EmbedTrack"
 # shellcheck disable=SC2086  # SEQUENCES is a space-separated list on purpose
 python "$REPO_ROOT/scripts/embedtrack/run_pretrained.py" \
   --dataset "$DATASET" --model-dataset "$MODEL_DATASET" --sequences $SEQUENCES \
-  --raw-root "$CTC_ROOT" --models-root KIT-Loe-GE/models --results-root results ${EXTRA_ARGS:-}
+  --raw-root "$CTC_ROOT" --models-root KIT-Loe-GE/models --results-root results
 STATUS=$?
 echo "end: $(date)  exit status: $STATUS"
 exit $STATUS
