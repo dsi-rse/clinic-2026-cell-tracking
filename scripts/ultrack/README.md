@@ -95,6 +95,25 @@ Repeat for `Fluo-C3DH-H157`, changing dataset, paths, diameter, and spacing rati
 Use a fresh output directory for each configuration. Omit the frame limits only
 after inspecting pilot results. 
 
+## Resuming after a job expires
+
+To rerun the same segmentation command with the same output directory and add
+`--resume`. Keep the model and segmentation settings unchanged. The script
+checks `run.json` and each existing mask's readability, shape, and integer labels,
+skips valid saved masks, and recomputes missing or damaged masks. For example,
+if frames 0–3 finished, it skips those and begins inference at frame 4.
+
+You can remove `--frame-stop 3` when extending a pilot to the full sequence
+with `--resume`. Historical frame runtimes are preserved; a mask recovered
+without a recorded runtime has `seconds: null`. Missing previews are regenerated
+without repeating inference. Mask files and JSON records are written through
+temporary files before replacement, reducing incomplete outputs on interruption.
+
+Do not run two jobs against the same output directory simultaneously. Resume
+assumes the raw images and any local model checkpoint contents have not changed;
+it checks paths/settings, not their file contents. Resuming a running job's old
+code requires restarting with the updated script after that job ends.
+
 ## What changed from the tutorial
 
 - Removed Colab mounting, notebook installation commands, and hard-coded paths.
