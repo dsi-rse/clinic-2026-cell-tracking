@@ -16,11 +16,19 @@ hardware: 1x NVIDIA A40 (node g008), 8 CPUs, 32G requested
 runtime: "00:22:40"
 peak_memory: MaxRSS 2219560K
 raw_output_location: external/EmbedTrack/results/Fluo-N2DL-HeLa/KIT-Loe-GE_model-Fluo-N2DH-GOWT1/train/{01_RES,02_RES}   # not in git; to be moved to the shared project directory
-evaluation_command: CTC EvaluationSoftware (Mac build) {SEG,TRA,DET}Measure <dir containing NN_GT and NN_RES> <seq> 3
+evaluation_command: >
+  conda activate cell-tracking-ctc-evaluation (environment file
+  environments/ctc-evaluation.yaml), then, from the repository root,
+  PYTHONPATH=src python scripts/ultrack/evaluate_ctc_result.py
+  --ground-truth-dir <CTC_ROOT>/ctc/Fluo-N2DL-HeLa/<seq>_GT
+  --result-dir external/EmbedTrack/results/Fluo-N2DL-HeLa/KIT-Loe-GE_model-Fluo-N2DH-GOWT1/train/<seq>_RES
+  --dataset Fluo-N2DL-HeLa --method embedtrack-gowt1-model --num-workers 4
 notes: >
   Cross-dataset negative control: the model trained on Fluo-N2DH-GOWT1 applied to
   Fluo-N2DL-HeLa. EmbedTrack models are trained per dataset, so a large drop is
   expected. There is no published score for this combination. EmbedTrack refuses a
   model path that does not contain the dataset name, so the model was reached through
   a symlink named Fluo-N2DL-HeLa_with_Fluo-N2DH-GOWT1 (same weights and config).
-  Scored on training sequences 01/02 with the Mac build of the CTC scorers.
+  Scored on training sequences 01/02. The table in scores.md comes from the
+  Mac build of the CTC scorers; the Python scorer in evaluation_command
+  reproduces sequence 01 exactly (see scores.md).
