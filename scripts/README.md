@@ -1,5 +1,31 @@
 # Scripts
 
+## Watershed hole-filling comparison
+
+`ultrack/run_2d_benchmark.py --method watershed --watershed-fill-holes`
+fills enclosed holes in each 2D Otsu foreground mask after small-object removal
+and before distance transform, seed detection, and watershed. The default is
+off; Cellpose and StarDist are unchanged. This uses binary hole filling, not
+morphological closing, and does not modify raw images.
+
+For GOWT1, we would compare baseline and filled runs with identical parameters and frame
+ranges, using a new output directory for each. For example, from the repository
+root in the existing Ultrack environment:
+
+```bash
+python scripts/ultrack/run_2d_benchmark.py \
+  --input-dir "$CTC_ROOT/Fluo-N2DH-GOWT1/01" \
+  --output-dir "$RUN_ROOT/gowt1-seq01-watershed-filled" \
+  --sequence 01 --method watershed --watershed-fill-holes
+```
+
+Baseline: Should omit the new flag and choose a different output directory. 
+
+Add `--labels-only` for segmentation inspection without tracking. The run report records `fill_holes`.
+
+Inspect crowded regions: enclosed background between touching cells can also
+be filled.
+
 Add reproducible scripts here for:
 
 - downloading and verifying public CTC training data;

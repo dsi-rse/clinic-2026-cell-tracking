@@ -172,8 +172,14 @@ def segment_with_watershed(
     smoothing_sigma: float,
     h_minima: float,
     minimum_object_size: int,
+    fill_holes: bool = False,
 ) -> np.ndarray:
-    """Segment bright cells using Otsu foreground and h-minima watershed."""
+    """Segment bright cells, optionally filling foreground holes before seeds.
+
+    Hole filling is applied independently to each 2D binary foreground mask,
+    after small-object removal and before the distance transform. Raw images
+    are unchanged; enclosed gaps in crowded regions may also be filled.
+    """
     from scipy import ndimage as ndi
     from skimage.filters import gaussian, threshold_otsu
     from skimage.morphology import h_maxima, remove_small_objects
@@ -188,6 +194,8 @@ def segment_with_watershed(
             foreground,
             min_size=minimum_object_size,
         )
+        if fill_holes:
+            foreground = ndi.binary_fill_holes(foreground)
 
         distance = ndi.distance_transform_edt(foreground)
         seed_mask = h_maxima(distance, h=h_minima)
