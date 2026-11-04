@@ -22,8 +22,8 @@ echo "segmentation: $(git -C "$SEG_REPO" rev-parse HEAD 2>/dev/null)"
 echo "tracking:     $(git -C "$TRK_REPO" rev-parse HEAD 2>/dev/null)"
 
 echo; echo "##### model"
-sha256sum "$SEG_REPO/models/kit-sch-ge/${MODEL_NAME}.pth" 2>&1
-"$SEG_PY" -c "import json; print('best_settings:', json.load(open('$SEG_REPO/models/kit-sch-ge/${MODEL_NAME}.json')).get('best_settings'))" 2>&1
+sha256sum "$MODEL_DIR/${MODEL_NAME}.pth" 2>&1
+"$SEG_PY" -c "import json; print('best_settings:', json.load(open('$MODEL_DIR/${MODEL_NAME}.json')).get('best_settings'))" 2>&1
 
 echo; echo "##### data"
 for SEQ in 01 02; do
@@ -50,16 +50,16 @@ for id in "${JOBIDS[@]}"; do ls ./*_"${id}".out 2>/dev/null; done
 
 echo; echo "##### outputs"
 for SEQ in 01 02; do
-  echo "segmentation $SEQ: $(ls "$DATA/${SEQ}_RES_$TAG" 2>/dev/null | wc -l) files in $DATA/${SEQ}_RES_$TAG"
+  echo "segmentation $SEQ: $(ls "$SEG_RES/${SEQ}_RES_$TAG" 2>/dev/null | wc -l) files in $SEG_RES/${SEQ}_RES_$TAG"
   echo "tracking     $SEQ: $(ls "$TRACK_OUT/${SEQ}_RES" 2>/dev/null | wc -l) files in $TRACK_OUT/${SEQ}_RES"
 done
 
 echo; echo "##### score CSVs"
-for f in "$SEG_EVAL_DIR/${DS}"_*_SEG_DET.csv "$TRACK_DIR/${DS}"_*_tracking_metrics.csv; do
+for f in "$SEG_METRICS/${DS}"_*_SEG_DET.csv "$TRACK_METRICS/${DS}"_*_tracking_metrics.csv; do
   [ -f "$f" ] && { echo "--- $f"; cat "$f"; echo; }
 done
 echo; echo "##### summary"
-"$SEG_PY" "$JOBS_DIR/summarize_scores.py" "$DS" --seg_eval_dir "$SEG_EVAL_DIR" --track_dir "$TRACK_DIR" 2>&1
+"$SEG_PY" "$SCRIPTS_DIR/summarize_scores.py" "$DS" --seg_eval_dir "$SEG_METRICS" --track_dir "$TRACK_METRICS" 2>&1
 } > "$OUT" 2>&1
 
 echo "Wrote $(pwd)/$OUT"

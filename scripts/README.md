@@ -284,3 +284,26 @@ PYTHONPATH=src python scripts/embedtrack/overlay_movie.py \
 Use `--step N` to draw every Nth frame for a quick check. `compare_with_gt.py`
 takes `--gt <seq>_GT/SEG` or `--gt <seq>_GT/TRA`, and `--only-gt-frames` keeps
 only frames that have ground truth.
+
+## KIT-GE (3)
+
+Scripts for the KIT-GE (3) pipeline. The Slurm jobs in `jobs/` call them through
+`$SCRIPTS_DIR` (set in `jobs/datasets.sh`).
+
+- [`kit-ge-3/segment_only.py`](kit-ge-3/segment_only.py): Segments CTC sequences
+  with a pretrained KIT-GE (3) model, using the same post-processing as the
+  authors' `eval.py` but without its scoring step.
+- [`kit-ge-3/seg_to_tracks.py`](kit-ge-3/seg_to_tracks.py): Writes one-frame
+  tracks for segmentation masks, so py-ctcmetrics can compute DET.
+- [`kit-ge-3/seg_3d_check.py`](kit-ge-3/seg_3d_check.py): Computes SEG for 3D
+  datasets whose ground truth is given as 2D slices (`man_seg_T_Z.tif`), per
+  slice as the CTC defines it.
+  Usage: `python seg_3d_check.py <seq>_GT <result folder>`.
+- [`kit-ge-3/summarize_scores.py`](kit-ge-3/summarize_scores.py): Per-sequence
+  and mean SEG/DET/TRA with OP_CSB and OP_CTB from the evaluation CSVs.
+- [`kit-ge-3/ctc_viz.py`](kit-ge-3/ctc_viz.py): Visualizes any CTC-format
+  result (masks + `res_track.txt`):
+  - `color`: color-coded masks, one Tab10 color per cell kept across frames;
+  - `overlay`: semi-transparent masks over the raw images;
+  - `movie`: tracking movie with trajectory lines (PNG frames, GIF, MP4).
+  Example: `python ctc_viz.py movie <dataset>/tracking/02_RES <out> --raw_dir <data>/02 --tail 0 --no_markers`.

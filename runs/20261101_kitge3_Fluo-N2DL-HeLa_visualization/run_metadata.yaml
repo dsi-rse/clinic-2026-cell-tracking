@@ -1,0 +1,16 @@
+run_name: 20261102_kitge3_Fluo-N2DL-HeLa_visualization
+purpose: Visualize KIT-GE (3) segmentation and tracking results for the midterm demo
+method: KIT-GE (3), visualization only
+input_run: runs/20261027_kitge3_Fluo-N2DL-HeLa_pretrained
+dataset: Fluo-N2DL-HeLa
+sequences: ["01", "02"]
+script: scripts/kit-ge-3/ctc_viz.py
+environment: KIT-GE segmentation env
+commands:
+  - python scripts/kit-ge-3/ctc_viz.py color $TRACK_OUT/02_RES $VIZ/02_tracking_colors
+  - python scripts/kit-ge-3/ctc_viz.py overlay $TRACK_OUT/02_RES $VIZ/02_tracking_overlay --raw_dir $DATA/02 --side_by_side
+  - python scripts/kit-ge-3/ctc_viz.py movie $TRACK_OUT/02_RES $VIZ/02_movie --raw_dir $DATA/02 --tail 0 --no_markers
+settings:
+  palette: Tab10, seed 0 (same colors on every rerun)
+  overlay_alpha: 0.4 (overlay), 0.3 (movie)
+output_location: net/spaces/clinic/CLS/DSC_CTC/runs/kit-ge-3/Fluo-N2DL-HeLa/visualizations (not in clinic repository)
