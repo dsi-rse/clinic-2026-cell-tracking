@@ -234,3 +234,53 @@ ffmpeg -y \
     -pix_fmt yuv420p \
     "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_overlay.mp4"
 ```
+
+## EmbedTrack pretrained inference
+
+[`embedtrack/run_pretrained.py`](embedtrack/run_pretrained.py) runs a pretrained
+EmbedTrack model on the sequences of one CTC dataset and writes CTC-format
+results (`<seq>_RES`). `--model-dataset` selects the model trained on a different
+dataset for cross-dataset tests; EmbedTrack only accepts a model path that
+contains the dataset name, so the script creates a symlink for that case. It
+checks that the raw data, ground truth and model exist before starting. Run it
+from the `embedtrack` environment through the Slurm wrapper
+[`../jobs/embedtrack_run_pretrained.sh`](../jobs/embedtrack_run_pretrained.sh), or
+directly:
+
+```bash
+python scripts/embedtrack/run_pretrained.py \
+    --dataset Fluo-N2DL-HeLa \
+    --model-dataset Fluo-N2DH-GOWT1 \
+    --sequences 01 02 \
+    --raw-root <CTC_ROOT>/ctc \
+    --models-root <EMBEDTRACK_MODELS_ROOT> \
+    --results-root results
+```
+
+Omit `--model-dataset` to use the model trained on the same dataset.
+
+## EmbedTrack visualization
+
+These scripts need the project source on the path, so run them from the
+repository root with `PYTHONPATH=src`. They share the helpers in
+[`../src/cell_tracking/track_utils.py`](../src/cell_tracking/track_utils.py)
+(track colours and centroids) and reuse the frame, boundary and image
+normalisation helpers from `cell_tracking.ctc_io`, `cell_tracking.ultrack_2d` and
+`cell_tracking.ctc_visualization`.
+
+| Script | What it writes |
+| --- | --- |
+| [`embedtrack/visualize_tracks.py`](embedtrack/visualize_tracks.py) | Per-frame PNGs with outlines coloured by track id and short tails, a GIF, and one image of every full trajectory |
+| [`embedtrack/overlay_movie.py`](embedtrack/overlay_movie.py) | A GIF of the raw movie with translucent masks and trajectories |
+| [`embedtrack/compare_with_gt.py`](embedtrack/compare_with_gt.py) | A GIF with predictions in magenta and ground truth in green |
+
+```bash
+PYTHONPATH=src python scripts/embedtrack/overlay_movie.py \
+    --raw <CTC_ROOT>/ctc/Fluo-N2DL-HeLa/02 \
+    --res <EMBEDTRACK_RESULTS>/Fluo-N2DL-HeLa/KIT-Loe-GE/train/02_RES \
+    --out <OUTPUT_DIR>
+```
+
+Use `--step N` to draw every Nth frame for a quick check. `compare_with_gt.py`
+takes `--gt <seq>_GT/SEG` or `--gt <seq>_GT/TRA`, and `--only-gt-frames` keeps
+only frames that have ground truth.
