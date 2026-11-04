@@ -1,0 +1,28 @@
+method: embedtrack
+method_repo: https://github.com/kaloeffler/EmbedTrack
+method_commit: 510bc748230056e50fb8078281d76533f41a1d64
+paper: Loeffler and Mikut, EmbedTrack (IEEE Access 2022; IEEE 9834915; arXiv 2204.10713)
+dataset: Fluo-N2DL-HeLa
+sequences:
+- '02'
+dataset_archive_sha256: 35dd99d58e071aba0b03880128d920bd1c063783cc280f9531fbdc5be614c82e
+model: pretrained KIT-Loe-GE model for Fluo-N2DL-HeLa
+model_archive_sha256: 0abfa648355fca0380fa6e02aeced3275d0b32de26093ff54f23e9b559fdf89e
+model_file: KIT-Loe-GE/models/Fluo-N2DL-HeLa/best_iou_model.pth
+environment: environments/embedtrack.yaml, plus compatibility patches (diffs in ../20261020_embedtrack_Fluo-N2DH-GOWT1_pretrained-kit-loe-ge/)
+command: RUN_ARGS="--min-mask-scale 0.25" sbatch --exclude=k003,m001 jobs/embedtrack_run_pretrained.sh
+  Fluo-N2DL-HeLa Fluo-N2DL-HeLa 02
+seed: null
+cluster_job_id: 2315709
+hardware: 1 GPU (node h002), 8 CPUs, 32G requested
+runtime: 00:04:23
+peak_memory: MaxRSS 2361936K
+raw_output_location: external/EmbedTrack/results/Fluo-N2DL-HeLa/KIT-Loe-GE_mms0.25/train/02_RES
+evaluation_command: conda activate cell-tracking-ctc-evaluation (environments/ctc-evaluation.yaml), then,
+  from the repository root, PYTHONPATH=src python scripts/ultrack/evaluate_ctc_result.py --ground-truth-dir
+  <CTC_ROOT>/ctc/Fluo-N2DL-HeLa/02_GT --result-dir external/EmbedTrack/results/Fluo-N2DL-HeLa/KIT-Loe-GE_mms0.25/train/02_RES
+  --dataset Fluo-N2DL-HeLa --method embedtrack-mms0.25 --num-workers 4
+notes: 'Parameter study: minimum object size x0.25 (about 26 px instead of 102 px); everything else at
+  the default. Scored on training sequence 02 (seen by the model) with the Python scorer. See scores.md
+  for the comparison with the default run. Raw output is not in git; to be moved to the shared project
+  directory.'
