@@ -16,29 +16,34 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--input-dir",
         type=Path,
-        required=True,
+        required=False,
         help="Complete raw sequence containing tNNN.tif.",
     )
     parser.add_argument(
         "--label-dir",
         type=Path,
-        required=True,
+        required=False,
         help="Saved maskNNN.tif volumes, e.g. Cellpose output.",
     )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument(
         "--config",
         type=Path,
-        required=True,
+        required=False,
         help="Ultrack TOML; use the baseline configuration for comparison.",
     )
-    parser.add_argument("--dataset", required=True)
-    parser.add_argument("--sequence", choices=["01", "02"], required=True)
+    parser.add_argument("--dataset")
+    parser.add_argument("--sequence", choices=["01", "02"])
+    parser.add_argument(
+        "--export-only",
+        action="store_true",
+        help="Export the saved solution in --output-dir without rerunning tracking.",
+    )
     parser.add_argument(
         "--scale",
         type=float,
         nargs=3,
-        required=True,
+        required=False,
         metavar=("Z", "Y", "X"),
         help="Spatial scale for linking; match baseline units.",
     )
@@ -53,6 +58,15 @@ def parse_args() -> argparse.Namespace:
         "--frame-stop", type=int, help="Exclusive end, for pilot tracking."
     )
     args = parser.parse_args()
+    if args.export_only:
+        return args
+    if any(
+        getattr(args, name) is None
+        for name in ["input_dir", "label_dir", "config", "dataset", "sequence", "scale"]
+    ):
+        parser.error(
+            "Tracking requires input-dir, label-dir, config, dataset, sequence, and scale."
+        )
     if any(not math.isfinite(v) or v <= 0 for v in args.scale):
         parser.error("Scale values must be finite and positive.")
     if any(not math.isfinite(v) or v < 0 for v in args.contour_sigma):
@@ -60,12 +74,51 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
+def recover_exports(output_dir: Path) -> None:
+    """Restore the saved configuration and export the existing database solution."""
+    from ultrack import load_config
+
+    from cell_tracking.ultrack_labels import export_label_tracks
+
+    record = output_dir / "run_report.json"
+    report = json.loads(record.read_text())
+    config = load_config(output_dir / "source_config.toml")
+    config.data_config.working_dir = output_dir.resolve()
+    expected = json.loads((output_dir / "effective_config.json").read_text())
+    if json.loads(config.model_dump_json()) != expected:
+        raise ValueError(
+            "Recovered configuration differs from the saved run; check environment and path."
+        )
+    result_dir = output_dir / (
+        f"{report['arguments']['sequence']}_RES"
+        if report["complete_sequence"]
+        else "subset_RES"
+    )
+    summary = export_label_tracks(config, output_dir, result_dir)
+    report.update(
+        status="complete",
+        tracking_summary=summary,
+        ctc_result_dir=str(result_dir.resolve()),
+        export_recovered=True,
+    )
+    report.pop("blocker", None)
+    record.write_text(json.dumps(report, indent=2) + "\n")
+    print(f"Recovered CTC export: {result_dir}", flush=True)
+
+
 def main() -> None:
     """Validate saved masks, track, export, and preserve configuration and errors."""
     args = parse_args()
+    if args.export_only:
+        recover_exports(args.output_dir)
+        return
     from ultrack import load_config
 
-    from cell_tracking.ultrack_labels import prepare_label_series, track_label_series
+    from cell_tracking.ultrack_labels import (
+        export_label_tracks,
+        prepare_label_series,
+        track_label_series,
+    )
 
     config_text = args.config.read_text()
     config = load_config(args.config)
@@ -109,13 +162,13 @@ def main() -> None:
         print(
             f"Tracking {len(frames)} frames; complete sequence: {complete}", flush=True
         )
-        tracker, summary = track_label_series(
+        track_label_series(
             labels, config, args.output_dir, args.scale, args.contour_sigma
         )
         result_dir = args.output_dir / (
             f"{args.sequence}_RES" if complete else "subset_RES"
         )
-        tracker.to_ctc(result_dir)
+        summary = export_label_tracks(config, args.output_dir, result_dir)
         report.update(
             status="complete",
             tracking_summary=summary,

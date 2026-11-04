@@ -216,6 +216,21 @@ source/effective configurations, and `run_report.json` with status/errors,
 runtime, versions, and the source Cellpose run record when available. Disk-backed
 inputs reduce loading pressure but do not bound Ultrack's own peak memory use.
 
+### Recover an export after solving
+
+If the solver completed but export failed, keep the run directory and database.
+In the same Ultrack environment, use the saved configuration and solution:
+
+```bash
+python scripts/ultrack/track_3d_labels.py --export-only \
+  --output-dir "$RUN_ROOT/mda231-cellpose3d-tracking-full"
+```
+
+This checks the saved configuration and exports through Ultrack's functional
+API. It does not repeat label conversion, segmentation, linking, or solving.
+Derived CSV, Zarr, and CTC export files are regenerated, and the run report is
+marked complete only after export succeeds. Keep the original run location.
+
 ### Evaluation
 
 Reuse the existing evaluator in its separate evaluation environment:

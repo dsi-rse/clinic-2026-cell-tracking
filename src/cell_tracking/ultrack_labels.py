@@ -75,7 +75,7 @@ def track_label_series(labels, config, output_dir: Path, scale, contour_sigma):
     Scale is spatial Z/Y/X spacing in the same units as linking distances.
     Contour sigma is Z/Y/X Gaussian smoothing in voxels, not physical units.
     """
-    from ultrack import Tracker, link, segment, solve
+    from ultrack import link, segment, solve
     from ultrack.utils import labels_to_contours
 
     foreground, contours = labels_to_contours(
@@ -87,11 +87,24 @@ def track_label_series(labels, config, output_dir: Path, scale, contour_sigma):
     segment(foreground, contours, config)
     link(config, scale=scale)
     solve(config)
-    tracker = Tracker(config=config)
-    tracks, graph = tracker.to_tracks_layer()
+    return config
+
+
+def export_label_tracks(config, output_dir: Path, result_dir: Path) -> dict:
+    """Export a persisted solution without relying on a new Tracker's state.
+
+    This can be called after an export failure without rerunning the solver.
+    Only derived export files are replaced; the tracking database is read.
+    """
+    from ultrack import to_ctc, to_tracks_layer, tracks_to_zarr
+
+    tracks, graph = to_tracks_layer(config)
     tracks.to_csv(output_dir / "tracks.csv", index=False)
-    tracker.to_zarr(store_or_path=output_dir / "segments.zarr")
-    return tracker, {
+    tracks_to_zarr(
+        config, tracks, store_or_path=output_dir / "segments.zarr", overwrite=True
+    )
+    to_ctc(result_dir, config, overwrite=True)
+    return {
         "track_rows": len(tracks),
         "unique_tracks": int(tracks["track_id"].nunique()),
         "lineage_entries": len(graph),

@@ -78,7 +78,7 @@ in that environment (check the saved baseline report first):
 
 ```python
 from ultrack import MainConfig
-from ultrack.config import save_config
+from ultrack.config.config import save_config
 
 config = MainConfig()
 config.data_config.n_workers = 1
@@ -89,7 +89,8 @@ config.tracking_config.solver_name = "GUROBI"
 save_config(config, "config/experiments/2d-baseline.toml")
 ```
 
-Confirm the installed `save_config` signature if your version differs. The
+`save_config` is imported from its implementation module because it is not
+exposed by `ultrack.config` in the project's installed version. The
 tracking runner saves its effective config and source-config SHA-256 for each
 experiment. In `cell-tracking-ultrack`, run:
 

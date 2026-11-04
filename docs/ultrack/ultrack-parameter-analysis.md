@@ -16,6 +16,8 @@ reproductions of published parameter settings.
   - [Plain watershed](#plain-watershed)
   - [Hole-filled watershed](#hole-filled-watershed)
 - [Fluo-N2DL-HeLa](#fluo-n2dl-hela)
+  - [Cellpose](#cellpose)
+    - [Contour smoothing](#contour-smoothing)
 - [Remaining parameter investigations](#remaining-parameter-investigations)
 
 ## Fluo-N2DH-GOWT1
@@ -145,16 +147,113 @@ new runs have not yet been added to this document.
 
 ## Fluo-N2DL-HeLa
 
-No new parameter-analysis results have been supplied yet. Keep the completed
-[HeLa reproduction results](ultrack-results.md#fluo-n2dl-hela) as references.
-Add separate method sections when sensitivity experiments are evaluated;
-do not infer HeLa outcomes from the GOWT1 experiment.
+### Cellpose
+
+#### Contour smoothing
+
+Ultrack converts the saved Cellpose object labels into a foreground mask and
+an image of object boundaries (the contour map). The contour-smoothing parameter,
+`contour_sigma`, controls the width of the Gaussian filter applied to that
+boundary map, measured in pixels for these 2D experiments.
+
+- **Sigma 4:** the baseline; spreads boundary values over a wider neighborhood.
+- **Sigma 2:** applies a narrower smoothing filter.
+- **Sigma 0:** applies no contour smoothing, preserving sharp label boundaries.
+
+These maps guide Ultrack's segmentation hypotheses and therefore can affect
+its final masks and tracks. Changing sigma does not rerun Cellpose or edit its
+saved input labels. It also does not guarantee smaller final masks: the effect
+on boundary placement must be checked against ground truth. This parameter is
+part of Ultrack's input conversion, rather than Cellpose's neural network.
+
+
+##### Experiment design
+
+The same saved Cellpose segmentation labels were reused for full public
+training sequences 01 and 02. Ultrack contour smoothing sigma was varied over
+4 (baseline), 2, and 0, with the same tracking configuration requested across
+the sweep. No Cellpose inference was repeated. Sigma is applied during
+label-to-contour conversion; it is distinct from the Gaussian image smoothing
+tested inside watershed on GOWT1.
+
+The experiment ids are `hela-01-cellpose-contour-{4,2,0}` and
+`hela-02-cellpose-contour-{4,2,0}`. Each result was evaluated against its
+corresponding CTC ground truth. Scores were supplied from the parameter
+runner's summary CSV; saved configuration and input records have not been
+independently inspected for this entry.
+
+##### Evaluation results
+
+| Sequence | Contour sigma | DET | SEG | TRA | OP_CTB |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 01 | 4 (baseline) | 0.936625 | 0.779104 | 0.933606 | 0.856355 |
+| 01 | 2 | 0.929355 | 0.750823 | 0.924153 | 0.837488 |
+| 01 | **0** | **0.938129** | **0.791604** | **0.935410** | **0.863507** |
+| 02 | 4 (baseline) | 0.967144 | 0.838270 | 0.964703 | 0.901486 |
+| 02 | 2 | 0.963611 | 0.831811 | 0.960327 | 0.896069 |
+| 02 | **0** | **0.967396** | **0.841843** | **0.964789** | **0.903316** |
+
+All six outputs passed structural validation (`Valid = 1`). Bold identifies
+the best tested contour sigma for Cellpose inputs in each sequence.
+
+Differences below are relative to sigma 4 in the same sweep, calculated from
+the supplied unrounded scores and then rounded to six decimals.
+
+| Sequence | Contour sigma | DET change | SEG change | TRA change | OP_CTB change |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 01 | 2 | -0.007269 | -0.028281 | -0.009453 | -0.018867 |
+| 01 | 0 | +0.001505 | +0.012500 | +0.001804 | +0.007152 |
+| 02 | 2 | -0.003533 | -0.006459 | -0.004376 | -0.005417 |
+| 02 | 0 | +0.000252 | +0.003574 | +0.000086 | +0.001830 |
+
+##### Interpretation and baseline consistency
+
+Removing contour smoothing improves all four metrics on both sequences.
+OP_CTB increases by approximately 0.72 percentage points on sequence 01 and
+0.18 on sequence 02. SEG increases by approximately 1.25 and 0.36 percentage
+points, respectively. Sigma 2 reduces all four metrics on both sequences,
+so performance does not improve monotonically as sigma decreases.
+
+**Best tested setting for these HeLa Cellpose-input runs: contour sigma 0.**
+The gains are modest and do not establish that this setting is best for other
+segmentation inputs or datasets. Overlays against ground truth are still
+needed to determine whether the improvement specifically corrects oversized
+boundaries.
+
+Sequence 01's sigma 4 result agrees with the original recorded baseline to
+six decimals. Sequence 02's sigma 4 OP_CTB is 0.901486, compared with 0.901470
+in the original reproduction record; DET and TRA also differ slightly. Use
+the baseline from this sweep for the differences above. The cause of the small
+rerun difference has not been established. Preserve the original reproduction
+values in [Ultrack results](ultrack-results.md#fluo-n2dl-hela).
+
+##### Records and follow-up
+
+With the recommended output root, experiment records are organized as:
+
+```text
+<ULTRACK_RUN_ROOT>/segmentation-parameter-analysis/<experiment-id>/
+  experiment.json
+  track.json
+  tracking/attempt-NNN/effective_config.json
+  evaluation/ctc_metrics.json
+  evaluation/ctc_metrics.csv
+```
+
+The shared `summary.csv` contains the supplied scores. Retain full-precision
+JSON/CSV values even though tables here are rounded. Runtime and hardware
+details have not yet been supplied for this sweep.
+
+Next comparisons are GOWT1 Cellpose contour smoothing, followed by StarDist,
+watershed variants, and ensemble inputs on both datasets. These are follow-up
+parameter experiments, not changes to the original reproduction benchmarks.
 
 ## Remaining parameter investigations
 
 - **Watershed:** inspect crowded-region overlays for the hole-filling comparison.
-- **Contour smoothing:** test separately from watershed image smoothing, reusing
-  fixed input labels to isolate the parameter change.
+- **Contour smoothing:** HeLa Cellpose sequences 01 and 02 are complete. Extend
+  to GOWT1 and the remaining segmentation methods, reusing fixed input labels
+  and keeping this separate from watershed image smoothing.
 - **Cellpose:** verify the meaning of `cellprob_threshold=0` in the installed
   Cellpose 3 implementation used for the 2D experiments.
 - **StarDist:** record actual loaded probability/NMS defaults, then vary one
