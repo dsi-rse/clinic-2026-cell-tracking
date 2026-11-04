@@ -119,11 +119,7 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=20,
     )
-    watershed_group.add_argument(
-        "--fill-hole",
-        type=bool,
-        default=True
-    )
+    watershed_group.add_argument("--fill-hole", type=bool, default=True)
     return parser.parse_args()
 
 

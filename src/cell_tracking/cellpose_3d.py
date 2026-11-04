@@ -38,8 +38,10 @@ def save_preview(image: np.ndarray, masks: np.ndarray, destination: Path) -> Non
     y = image.shape[1] // 2
     fig, axes = plt.subplots(2, 2, figsize=(10, 7))
     for row, (raw, labels, name) in enumerate(
-        [(background[z], masks[z], f"XY z={z}"),
-         (background[:, y, :], masks[:, y, :], f"XZ y={y}")]
+        [
+            (background[z], masks[z], f"XY z={z}"),
+            (background[:, y, :], masks[:, y, :], f"XZ y={y}"),
+        ]
     ):
         axes[row, 0].imshow(raw, cmap="gray", vmin=0, vmax=1)
         axes[row, 1].imshow(label2rgb(labels, image=raw, bg_label=0, alpha=0.4))
