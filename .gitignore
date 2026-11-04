@@ -171,3 +171,7 @@ output/*
 # Cluster jobs
 slurm-*.out
 logs/
+
+# KIT-GE (3) pipeline outputs and logs
+jobs/*.out
+jobs/run_info_*.txt

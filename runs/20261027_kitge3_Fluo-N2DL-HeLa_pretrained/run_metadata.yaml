@@ -1,0 +1,49 @@
+method: KIT-GE (3)
+segmentation_repo: https://github.com/TimScherr/KIT-GE-3-Cell-Segmentation-for-CTC
+segmentation_commit: 318eca78419bdf4a9bcbf1bf579db9ff0854daa8
+tracking_repo: https://github.com/kaloeffler/KIT-GE-3-Cell-Tracking-for-CTC
+tracking_commit: 293cbb73cd080ea5d64ffcb7169dbbc734d66b3a
+clinic_commit: TBD
+dataset_frames: {"01": 92, "02": 92}
+ground_truth: {"01": "28 SEG frames (partial annotation), 92 TRA frames", "02": "8 SEG frames (partial annotation), 92 TRA frames"}
+dataset: Fluo-N2DL-HeLa
+model: Fluo-N2DL-HeLa_GT+ST_model (pretrained CTC submission model, downloaded by download_models.py)
+model_file: external/KIT-GE-3-Cell-Segmentation-for-CTC/models/kit-sch-ge/Fluo-N2DL-HeLa_GT+ST_model.pth
+model_sha256: 5b160306bf97b5fdf3f0291c36ad4edfd89be28b74876deeffe290aeec150244
+model_best_settings: {th_cell: 0.07, th_seed: 0.35, scale_factor: 1, apply_clahe: false, OP_CSB: 0.93022275}   # from the model json (authors' training-set evaluation)
+environment:
+  segmentation: prefix env external/KIT-GE-3-Cell-Segmentation-for-CTC/env — Python 3.10.13, torch 2.1.2+cu121, numpy 1.23.5, tifffile 2021.11.2, py-ctcmetrics 1.3.3
+  tracking: conda env tracking_env — Python 3.8.20, numpy 1.23.5, gurobipy 11.0.3 (academic WLS license), tifffile 2021.1.14, imagecodecs 2021.1.11 (conda-forge)
+config:
+  segmentation: th_cell=0.07, th_seed=0.35, scale=1, batch_size=16, no CLAHE / merging / artifact correction (same as the authors' submission script Fluo-N2DL-HeLa-01.sh)
+  tracking: run_tracking defaults, delta_t=3, default_roi_size=2
+command: cd jobs && bash full_job.sh Fluo-N2DL-HeLa
+seed: null
+cluster_job_id:
+  segmentation: 2259586
+  tracking: 2259587
+  segmentation_evaluation: 2259588
+  tracking_evaluation: 2259589
+hardware:
+  segmentation: node g004, 1 GPU, 8 CPUs, 64G requested
+  tracking: node h002, 8 CPUs, 64G requested
+  segmentation_evaluation: node g002, 4 CPUs, 32G requested
+  tracking_evaluation: node j004-ds, 4 CPUs, 32G requested
+runtime: {segmentation: "00:05:14", tracking: "00:04:25", segmentation_evaluation: "00:01:58", tracking_evaluation: "00:03:12"}
+peak_memory: {segmentation: 2821304K (2.69 GiB), tracking: 1139004K (1.09 GiB), segmentation_evaluation: 2628560K (2.51 GiB), tracking_evaluation: 1321860K (1.26 GiB)}
+raw_output_location:
+  segmentation: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/external/KIT-GE-3-Cell-Segmentation-for-CTC/training_data/Fluo-N2DL-HeLa/{01,02}_RES_Fluo-N2DL-HeLa_GT+ST_model_0.35_0.07
+  det_copies: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/seg_eval/Fluo-N2DL-HeLa/{01,02}_RES
+  tracking: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/tracking_results/Fluo-N2DL-HeLa/{01,02}_RES
+  score_csvs: /net/spaces/scratch/evt-kit-ge/clinic-2026-cell-tracking/{seg_eval,tracking_results}/Fluo-N2DL-HeLa_{01,02}_*.csv
+evaluation_command: >
+  py-ctcmetrics 1.3.3: ctc_evaluate --gt <seq>_GT --res seg_eval/Fluo-N2DL-HeLa/<seq>_RES --det --seg (segmentation, jobs/seg_eval.sh);
+  ctc_evaluate --gt <seq>_GT --res tracking_results/Fluo-N2DL-HeLa/<seq>_RES (tracking, all metrics, jobs/track_eval.sh)
+notes: >
+  Scored on training sequences 01/02, not the hidden challenge sequences used for the published values.
+  The official CTC Linux binaries (SEGMeasure/DETMeasure) segfault on the cluster, so all scores come
+  from py-ctcmetrics; DET on segmentation output uses jobs/seg_to_tracks.py to supply the res_track.txt
+  py-ctcmetrics requires. The model was trained on crops from sequences 01 and 02, so this checks reproduction
+  of the pipeline, not generalization. Library versions are newer than the repository pins 
+  (PyTorch 1.7 / CUDA 11.0). Despite these differences, OP_CSB matches the authors' own training-set value 
+  within 0.0012.
