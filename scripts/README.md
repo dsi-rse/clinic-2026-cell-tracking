@@ -93,12 +93,16 @@ Cellpose 4 uses a different model family. Create its separate environment:
 ```bash
 micromamba create --file environments/ultrack-cellpose.yaml
 micromamba activate cell-tracking-ultrack-cellpose
-python -m pip install -e .
+export PYTHONPATH="$PWD/src"
 ```
 
-The recipe provides the reproducible `cyto2` software version but does not
-guarantee a CUDA-enabled PyTorch build. Use `--cellpose-gpu` only after checking
-that `torch.cuda.is_available()` returns `True`; otherwise leave the flag out.
+The environment pins NumPy 2.0.2 because Cellpose 3 requires NumPy below 2.1.
+Do not run `python -m pip install -e .` in this environment: the main project
+currently requires NumPy 2.2 or newer. `PYTHONPATH` makes the project source
+available without changing the Cellpose-compatible NumPy version. The recipe
+provides the reproducible `cyto2` software version but does not guarantee a
+CUDA-enabled PyTorch build. Use `--cellpose-gpu` only after checking that
+`torch.cuda.is_available()` returns `True`; otherwise leave the flag out.
 
 Set the shared model cache before the first Cellpose import, then run the same
 five-frame check:
@@ -122,3 +126,161 @@ sequence after inspecting the subset. A complete run exports `01_RES` or
 `02_RES`; a partial run exports `subset_RES` so it cannot be confused with a
 benchmark result. Every run also writes `run_report.json` with package
 versions, parameters, runtimes, and output counts.
+
+## Reusable 2D Ultrack ensemble
+
+[`ultrack/run_2d_ensemble.py`](ultrack/run_2d_ensemble.py) reuses the saved
+`input_labels` from complete watershed, Cellpose, and StarDist runs. Following
+the published Ultrack experiment, it combines the three binary foreground maps
+with logical OR and averages the three contour maps. It then runs the common
+Ultrack stages and exports a CTC result. The segmentation models are not run
+again.
+
+Run the ensemble in the base `cell-tracking-ultrack` environment. The script
+defaults to one segmentation worker to limit peak memory on the larger GOWT1
+images:
+
+```bash
+python scripts/ultrack/run_2d_ensemble.py \
+    --input-dir <CTC_ROOT>/ctc/Fluo-N2DH-GOWT1/01 \
+    --watershed-label-dir \
+        <ULTRACK_RUN_ROOT>/gowt1-seq01-full-watershed/input_labels \
+    --cellpose-label-dir \
+        <ULTRACK_RUN_ROOT>/gowt1-seq01-full-cellpose/input_labels \
+    --stardist-label-dir \
+        <ULTRACK_RUN_ROOT>/gowt1-seq01-full-stardist/input_labels \
+    --output-dir <ULTRACK_RUN_ROOT>/gowt1-seq01-full-ensemble \
+    --sequence 01
+```
+
+All three label directories must contain the same requested frame numbers and
+image shape. Use `--frame-start` and `--frame-stop` for a subset check. A full
+run writes `01_RES` or `02_RES`, while a subset writes `subset_RES`. GOWT1
+ensemble results are additional project experiments because the selected
+Ultrack paper does not report a matching GOWT1 benchmark.
+
+## CTC overlay movie
+
+[`ultrack/render_ctc_overlay.py`](ultrack/render_ctc_overlay.py) creates a
+two-panel animated GIF for qualitative review of a 2D CTC result. The left
+panel overlays ground-truth boundaries in green and prediction boundaries in
+magenta. The right panel shows overlapping foreground in green,
+prediction-only pixels in red, and ground-truth-only pixels in cyan. It also
+reports per-frame instance matches using a configurable intersection-over-union
+threshold.
+
+Use `TRA` masks for a continuous tracking movie. Ground-truth and prediction
+track IDs can be added for a small crop with `--show-track-ids`. Use `SEG` for
+segmentation-specific review, noting that CTC segmentation annotations may be
+available for only a subset of frames. Add `--tracking-only` to omit the
+segmentation-agreement panel and its instance-match counts when using `TRA`.
+
+```bash
+export CTC_ROOT=<PROJECT_DATA_ROOT>
+export ULTRACK_RUN_ROOT=<PROJECT_DATA_ROOT>/runs/ultrack
+export PYTHONPATH="$PWD/src"
+
+python scripts/ultrack/render_ctc_overlay.py \
+    --raw-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01" \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01_GT" \
+    --result-dir "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/01_RES" \
+    --ground-truth-source TRA \
+    --output-path \
+        "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_overlay.gif" \
+    --fps 4 \
+    --scale 0.5
+```
+
+For a segmentation-focused GIF, select the sparse `SEG` annotations and skip
+frames that do not have a segmentation mask:
+
+```bash
+python scripts/ultrack/render_ctc_overlay.py \
+    --raw-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01" \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01_GT" \
+    --result-dir "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/01_RES" \
+    --ground-truth-source SEG \
+    --only-annotated \
+    --output-path \
+        "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_SEG_overlay.gif" \
+    --fps 1 \
+    --scale 0.5
+```
+
+For track IDs, first choose a crop containing a manageable number of cells:
+
+```bash
+python scripts/ultrack/render_ctc_overlay.py \
+    --raw-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01" \
+    --ground-truth-dir "$CTC_ROOT/ctc/Fluo-N2DL-HeLa/01_GT" \
+    --result-dir "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/01_RES" \
+    --ground-truth-source TRA \
+    --output-path \
+        "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_crop.gif" \
+    --crop 100 500 200 700 \
+    --tracking-only \
+    --show-track-ids \
+    --max-track-labels 30 \
+    --fps 4 \
+    --scale 1
+```
+
+If an MP4 is easier to use in the presentation, convert the GIF with FFmpeg:
+
+```bash
+ffmpeg -y \
+    -i "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_overlay.gif" \
+    -movflags +faststart \
+    -pix_fmt yuv420p \
+    "$ULTRACK_RUN_ROOT/hela-seq01-full-ensemble/visualizations/01_TRA_overlay.mp4"
+```
+
+## EmbedTrack pretrained inference
+
+[`embedtrack/run_pretrained.py`](embedtrack/run_pretrained.py) runs a pretrained
+EmbedTrack model on the sequences of one CTC dataset and writes CTC-format
+results (`<seq>_RES`). `--model-dataset` selects the model trained on a different
+dataset for cross-dataset tests; EmbedTrack only accepts a model path that
+contains the dataset name, so the script creates a symlink for that case. It
+checks that the raw data, ground truth and model exist before starting. Run it
+from the `embedtrack` environment through the Slurm wrapper
+[`../jobs/embedtrack_run_pretrained.sh`](../jobs/embedtrack_run_pretrained.sh), or
+directly:
+
+```bash
+python scripts/embedtrack/run_pretrained.py \
+    --dataset Fluo-N2DL-HeLa \
+    --model-dataset Fluo-N2DH-GOWT1 \
+    --sequences 01 02 \
+    --raw-root <CTC_ROOT>/ctc \
+    --models-root <EMBEDTRACK_MODELS_ROOT> \
+    --results-root results
+```
+
+Omit `--model-dataset` to use the model trained on the same dataset.
+
+## EmbedTrack visualization
+
+These scripts need the project source on the path, so run them from the
+repository root with `PYTHONPATH=src`. They share the helpers in
+[`../src/cell_tracking/track_utils.py`](../src/cell_tracking/track_utils.py)
+(track colours and centroids) and reuse the frame, boundary and image
+normalisation helpers from `cell_tracking.ctc_io`, `cell_tracking.ultrack_2d` and
+`cell_tracking.ctc_visualization`.
+
+| Script | What it writes |
+| --- | --- |
+| [`embedtrack/visualize_tracks.py`](embedtrack/visualize_tracks.py) | Per-frame PNGs with outlines coloured by track id and short tails, a GIF, and one image of every full trajectory |
+| [`embedtrack/overlay_movie.py`](embedtrack/overlay_movie.py) | A GIF of the raw movie with translucent masks and trajectories |
+| [`embedtrack/compare_with_gt.py`](embedtrack/compare_with_gt.py) | A GIF with predictions in magenta and ground truth in green |
+
+```bash
+PYTHONPATH=src python scripts/embedtrack/overlay_movie.py \
+    --raw <CTC_ROOT>/ctc/Fluo-N2DL-HeLa/02 \
+    --res <EMBEDTRACK_RESULTS>/Fluo-N2DL-HeLa/KIT-Loe-GE/train/02_RES \
+    --out <OUTPUT_DIR>
+```
+
+Use `--step N` to draw every Nth frame for a quick check. `compare_with_gt.py`
+takes `--gt <seq>_GT/SEG` or `--gt <seq>_GT/TRA`, and `--only-gt-frames` keeps
+only frames that have ground truth.

@@ -27,6 +27,66 @@ def load_image_stack(image_paths: list[Path]) -> np.ndarray:
     return np.stack(images)
 
 
+def load_label_stack(label_dir: Path, frame_numbers: list[int]) -> np.ndarray:
+    """Load instance-label TIFFs for a specific ordered list of frames."""
+    if not label_dir.is_dir():
+        raise FileNotFoundError(f"Label directory does not exist: {label_dir}")
+    if not frame_numbers:
+        raise ValueError("At least one frame number is required.")
+
+    label_paths = [label_dir / f"mask{frame:03d}.tif" for frame in frame_numbers]
+    missing_paths = [path for path in label_paths if not path.is_file()]
+    if missing_paths:
+        missing_names = ", ".join(path.name for path in missing_paths[:5])
+        raise FileNotFoundError(f"Missing label files in {label_dir}: {missing_names}")
+
+    labels = [tifffile.imread(path) for path in label_paths]
+    return np.stack(labels)
+
+
+def combine_label_stacks(
+    label_dirs: dict[str, Path],
+    frame_numbers: list[int],
+    expected_shape: tuple[int, ...],
+    contour_sigma: float,
+) -> tuple[np.ndarray, np.ndarray, dict[str, dict[str, int]]]:
+    """Combine label-derived foregrounds by OR and contours by mean."""
+    if not label_dirs:
+        raise ValueError("At least one label directory is required.")
+
+    try:
+        from ultrack.utils import labels_to_contours
+    except ModuleNotFoundError as error:
+        raise ModuleNotFoundError(
+            "Ultrack is required to combine instance-label inputs."
+        ) from error
+
+    combined_foreground = np.zeros(expected_shape, dtype=bool)
+    contour_sum = np.zeros(expected_shape, dtype=np.float32)
+    label_counts: dict[str, dict[str, int]] = {}
+
+    for method, label_dir in label_dirs.items():
+        print(f"Loading {method} labels from {label_dir}")
+        labels = load_label_stack(label_dir, frame_numbers)
+        validate_labels(labels, expected_shape)
+        label_counts[method] = {
+            str(frame): int(np.count_nonzero(np.unique(frame_labels)))
+            for frame, frame_labels in zip(frame_numbers, labels)
+        }
+
+        print(f"Converting {method} labels to foreground and contours")
+        method_foreground, method_contours = labels_to_contours(
+            labels,
+            sigma=contour_sigma,
+        )
+        combined_foreground |= np.asarray(method_foreground, dtype=bool)
+        contour_sum += np.asarray(method_contours, dtype=np.float32)
+        del labels, method_foreground, method_contours
+
+    combined_contours = contour_sum / len(label_dirs)
+    return combined_foreground, combined_contours, label_counts
+
+
 def find_label_boundaries(labels: np.ndarray) -> np.ndarray:
     """Find inner boundaries between 2D labels and the background."""
     boundaries = np.zeros_like(labels, dtype=bool)
