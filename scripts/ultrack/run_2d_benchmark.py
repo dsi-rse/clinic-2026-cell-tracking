@@ -100,6 +100,11 @@ def parse_args() -> argparse.Namespace:
 
     watershed_group = parser.add_argument_group("Watershed")
     watershed_group.add_argument(
+        "--watershed-fill-holes",
+        action="store_true",
+        help="Fill enclosed holes in each watershed foreground mask before seed detection.",
+    )
+    watershed_group.add_argument(
         "--watershed-smoothing-sigma",
         type=float,
         default=1.0,
@@ -114,6 +119,7 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=20,
     )
+    watershed_group.add_argument("--fill-hole", type=bool, default=True)
     return parser.parse_args()
 
 
@@ -218,12 +224,14 @@ def generate_labels(
             smoothing_sigma=args.watershed_smoothing_sigma,
             h_minima=args.watershed_h_minima,
             minimum_object_size=args.watershed_minimum_object_size,
+            fill_holes=args.watershed_fill_holes,
         )
         parameters = {
             "foreground_threshold": "Otsu per frame",
             "smoothing_sigma": args.watershed_smoothing_sigma,
             "h_minima": args.watershed_h_minima,
             "minimum_object_size": args.watershed_minimum_object_size,
+            "fill_holes": args.watershed_fill_holes,
         }
 
     validate_labels(labels, images.shape)

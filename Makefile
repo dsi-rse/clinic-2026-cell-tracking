@@ -17,3 +17,7 @@ include .env
 open-ssh-login-node:
 	code --remote ssh-remote+fe.ds ~/cell-tracking-clinic
 
+.PHONY: segmentation-parameters
+segmentation-parameters:
+	python scripts/ultrack/run_segmentation_parameters.py $(ARGS)
+

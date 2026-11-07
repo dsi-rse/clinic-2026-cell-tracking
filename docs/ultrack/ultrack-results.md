@@ -1,6 +1,9 @@
 # Ultrack experiment results
 
 This document records completed Ultrack experiments and their interpretation.
+For follow-up preprocessing and sensitivity experiments, see
+[Ultrack parameter analysis](ultrack-parameter-analysis.md), including plain
+and hole-filled watershed comparisons on GOWT1.
 It is separate from
 [`ultrack-reproducibility.md`](ultrack-reproducibility.md), which documents how
 to recreate the environments, workflows, and evaluations.
@@ -58,6 +61,10 @@ personal or machine-specific path.
       - [Experiment status](#experiment-status-7)
       - [Evaluation results](#evaluation-results-7)
       - [Interpretation](#interpretation-4)
+  - [Fluo-C3DL-MDA231](#fluo-c3dl-mda231)
+    - [Overall comparison](#overall-comparison-2)
+    - [Official 3D U-Net](#official-3d-u-net)
+    - [Cellpose 3D](#cellpose-3d)
 
 ## Fluo-N2DL-HeLa
 
@@ -903,17 +910,20 @@ prove, the watershed error carry-over hypothesis.
 
 ### Overall comparison
 
-The project evaluated the authors' official 3D U-Net workflow on public
-training sequence 01. The published paper reports a separate score on the
-hidden CTC test set:
+The project evaluated the authors' official 3D U-Net workflow and an alternative
+Cellpose 3D-to-Ultrack pipeline on public training sequence 01. The published
+paper reports a separate score on the hidden CTC test set:
 
-| Result | Evaluation split | SEG | TRA | `OP_CTB` |
-| --- | --- | ---: | ---: | ---: |
-| Project official-workflow run | Public training sequence 01 | 0.385566 | 0.901970 | 0.643768 |
-| Authors' published submission | Hidden CTC test set | 0.549 | 0.818 | 0.683 |
+| Result | Evaluation split | DET | SEG | TRA | `OP_CTB` |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Project official U-Net workflow | Public training sequence 01 | 0.909341 | 0.385566 | 0.901970 | 0.643768 |
+| Project Cellpose 3D + Ultrack | Public training sequence 01 | 0.479945 | 0.063397 | 0.460655 | 0.262026 |
+| Authors' published submission | Hidden CTC test set | Not reported | 0.549 | 0.818 | 0.683 |
 
-These rows are not a direct reproduction comparison because they use different
-images and annotations. Descriptively, the public-sequence run has higher TRA,
+The two project runs use the same public sequence and ground-truth directory,
+so their pipeline scores can be compared. The published row is not a direct
+reproduction comparison because it uses different images and annotations.
+Descriptively, the public-sequence U-Net run has higher TRA,
 lower SEG, and a CTB 0.039232 below the published hidden-test result. Those
 differences must not be attributed to implementation quality without a common
 evaluation split.
@@ -959,3 +969,117 @@ The repository revision, checkpoint hash, A40 GPU model, Slurm job ID, and
 allocation are recorded in the setup guide. The final job state and elapsed
 time, stage runtimes, output counts, GPU driver, warnings, and deviations still
 need to be transcribed from the final run and scheduler logs.
+
+### Cellpose 3D
+
+#### Experiment status and configuration
+
+Cellpose 3D generated masks for all 12 public training sequence 01 frames
+(`t000.tif` through `t011.tif`). These masks were converted into foreground
+and contour maps, then processed by Ultrack and exported in CTC format.
+The evaluation summary was supplied from the cluster terminal. This is an
+alternative segmentation-input experiment, not a reproduction of a published
+Cellpose 3D benchmark on MDA231.
+
+The requested inference settings retained the pilot configuration:
+
+| Parameter | Setting |
+| --- | --- |
+| Cellpose version / model | 4.2.1.1 / `cpsam` |
+| Mode | True volumetric segmentation, `do_3D=True` |
+| XY diameter | 15 pixels (provisional size estimate) |
+| Anisotropy | 4.83, from Z/XY voxel spacing |
+| Cell probability threshold | 0 |
+| Minimum size | 15 |
+| Batch size | 1 |
+| Input smoothing sigma (ZYX) | 0, 0, 0 |
+| Local normalization block size | 0 |
+
+The tracking command requested contour sigma `(0, 0, 0)` and linking scale
+`(4.83, 1, 1)` with the MDA231 baseline TOML. Check the saved `run.json` and
+`effective_config.json` before treating these requested settings as a fully
+verified execution record. In particular, baseline linking-distance units and
+the suitability of its size filters for Cellpose-derived maps remain to be
+checked. These are possible sources of differences, not established causes.
+
+The solver reported an optimal solution. Export initially failed because the
+code constructed a fresh stateful `Tracker` after solving through the
+functional API. The exporter was corrected to read the saved solution through
+functional APIs; the subsequent evaluation below confirms a CTC output was
+produced. This export failure alone does not explain the low scores.
+
+#### Evaluation results
+
+| Sequence | Valid | DET | SEG | TRA | `OP_CTB` |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 01 | 1 | 0.479945 | 0.063397 | 0.460655 | 0.262026 |
+
+| Metric | Official U-Net + Ultrack | Cellpose 3D + Ultrack | Difference (Cellpose minus U-Net) |
+| --- | ---: | ---: | ---: |
+| DET | 0.909341 | 0.479945 | -0.429396 |
+| SEG | 0.385566 | 0.063397 | -0.322169 |
+| TRA | 0.901970 | 0.460655 | -0.441315 |
+| `OP_CTB` | 0.643768 | 0.262026 | -0.381742 |
+
+Differences use the six-decimal displayed scores. The supplied unrounded
+Cellpose values are DET 0.4799450549450549, SEG 0.06339681597806188,
+TRA 0.46065514323703616, and OP_CTB 0.26202597960754903.
+
+Selected tracking-error diagnostics from the evaluation:
+
+| Node splits | False negatives | False positives | Edges deleted | Edges added | Edges changed |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 10 | 183 | 13 | 12 | 214 | 5 |
+
+The reported AOGM was 2231.0, against an empty-graph reference cost of 4136.5.
+Structural validity (`Valid = 1`) confirms format consistency, not segmentation
+or tracking accuracy. Solver optimality is relative to the supplied hypotheses
+and objective; it does not establish agreement with ground truth.
+
+#### Interpretation and next checks
+
+This Cellpose 3D-to-Ultrack configuration performs substantially worse than the
+official U-Net pipeline on the same public sequence. OP_CTB decreases by about
+38.17 percentage points. SEG is particularly low, and missed detections
+outnumber extra detections (183 versus 13). Aggregate counts do not locate
+where objects were lost or establish a single failure mechanism.
+
+The initial pilot previews showed plausible masks on a few central slices,
+but that qualitative assessment did not predict full-sequence performance.
+These scores evaluate final Ultrack outputs, not untouched Cellpose masks, so
+the decline cannot yet be attributed entirely to Cellpose inference.
+
+Before another expensive inference run:
+
+1. Compare saved Cellpose masks with final Ultrack masks at matching frames and
+   Z slices to identify objects discarded or reshaped downstream.
+2. Compare both with the available ground-truth annotations, including dim
+   cells and object extent through Z. Do not assume bright regions cover the
+   full annotated cell.
+3. Inspect effective size filters, contour-map settings, and linking scale
+   against the baseline and the actual Cellpose label sizes.
+4. Confirm consistent sparse-slice 3D annotation handling and evaluator versions
+   before interpreting the numerical differences as a controlled method effect.
+
+No improvement over the U-Net baseline has been established. H157 performance
+has not been evaluated and must not be inferred from this MDA231 result.
+
+#### Output records
+
+```text
+<ULTRACK_RUN_ROOT>/mda231-cellpose3d-full/
+  mask000.tif ... mask011.tif
+  run.json
+
+<ULTRACK_RUN_ROOT>/mda231-cellpose3d-tracking-full/
+  source_config.toml
+  effective_config.json
+  run_report.json
+  01_RES/
+  evaluation/01_RES/ctc_metrics.json
+  evaluation/01_RES/ctc_metrics.csv
+```
+
+Retain full-precision evaluation files and effective configurations outside
+Git. Full-run inference/tracking runtime and hardware details have not yet
+been transcribed from those records.
