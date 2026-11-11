@@ -36,3 +36,8 @@ Also copy `config/data_paths.example.yaml` to the ignored file `config/data_path
 ## Data preparation
 
 Never overwrite the original movies. Conversion scripts should preserve metadata or record it explicitly. For anisotropic 3D data, pass physical voxel spacing to methods that support it and document any resampling.
+
+The fixed CLS 2D subset, automated initialization, correction conventions, and
+annotation status are documented in
+[`cls-2d-annotation.md`](ultrack/cls-2d-annotation.md). That guide links to the
+separate local macOS environment setup.
