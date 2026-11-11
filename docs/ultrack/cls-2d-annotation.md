@@ -4,10 +4,30 @@ This document records the evolving plan, decisions, conventions, and status
 for building a small manually corrected reference dataset from the CLS loose
 colony movie. It is intentionally separate from software installation.
 
-For the verified Apple Silicon environment, follow
-[`ultrack-local-macos.md`](ultrack-local-macos.md). The annotation workflow
-begins only after Cellpose, Napari, Ultrack, and Gurobi pass the checks in that
-guide.
+For the verified Apple Silicon environment, follow the
+[local macOS setup](ultrack-setup.md#local-macos-setup). The annotation
+workflow begins only after Cellpose, Napari, Ultrack, and Gurobi pass the
+checks in that section.
+
+- [CLS 2D annotation pilot](#cls-2d-annotation-pilot)
+  - [Goal](#goal)
+  - [Selected source and subset](#selected-source-and-subset)
+    - [Selection criteria](#selection-criteria)
+    - [Method](#method)
+  - [How divisions look in this movie](#how-divisions-look-in-this-movie)
+    - [Results](#results)
+    - [Candidate division events](#candidate-division-events)
+  - [Prepare the fixed image subset in Fiji](#prepare-the-fixed-image-subset-in-fiji)
+  - [Automated initialization](#automated-initialization)
+    - [Cellpose smoke test](#cellpose-smoke-test)
+      - [Smoke-test result](#smoke-test-result)
+      - [Visual inspection and cell-probability comparison](#visual-inspection-and-cell-probability-comparison)
+      - [Provisional full-subset run at `-0.5`](#provisional-full-subset-run-at--05)
+  - [Manual correction conventions](#manual-correction-conventions)
+  - [Artifacts to preserve](#artifacts-to-preserve)
+  - [Quality assurance and evaluation](#quality-assurance-and-evaluation)
+  - [Current status](#current-status)
+
 
 ## Goal
 
@@ -47,7 +67,9 @@ were estimated to remain within the crop during the earlier crop-selection
 analysis, before the interval was shortened to frames 0–16. These automated
 counts supported subset selection but do not constitute ground truth.
 
-**Selection Criteria**
+### Selection criteria
+
+The region should meet most of these:
 
 | Criterion | How it was measured |
 | --- | --- |
@@ -57,20 +79,67 @@ counts supported subset selection but do not constitute ground truth.
 | Both separated and moderately crowded cells | Share of nuclei whose nearest neighbour is < 75 px (crowded) vs > 110 px (separated) |
 | Signal stays visible throughout | Lowest-to-highest ratio of median nucleus brightness in the crop over the frames used |
 
+### Method
 
-## Candidate division events
+1. **Detect nuclei** in every frame (0–19): background subtraction, Otsu threshold, and watershed to split touching nuclei. This found about 600 nuclei in frame 0, rising to about 750 by frame 19.
+2. **Track nuclei** between consecutive frames by optimal one-to-one matching within 45 px. Nuclei move a median of about 20 px per frame.
+3. **Check for stage drift.** The shift between frames differs by region, and isolated cells barely move (about 2 px per frame). The motion is real collective migration, so no drift correction was applied.
+4. **Detect candidate divisions.** These are a nucleus that dims and spreads (or drops out), followed within 3 frames by two nearby nuclei. Each candidate is flagged for crossing, overlap, detection failure, daughters not persisting, asymmetric daughters, or too late to verify.
+5. **Review by eye.** Six-frame montages (two frames before the event to three after) were inspected for all automatically confirmed candidates and for persistent ambiguous candidates in the leading regions. Each was labelled confirmed-looking, plausible, ambiguous, or rejected.
+6. **Score windows.** All 1024 × 1024 and 768 × 768 windows on a 64 px grid were scored on the criteria above. Confirmed-looking divisions count fully and plausible ones count half; windows that are too sparse or too dense are penalised.
+
+## How divisions look in this movie
+
+A dividing nucleus goes dim and diffuse, not bright. Over 1–2 frames it rounds up and its signal spreads into a larger, faint blob. Two dim daughters then appear close together, separate, and brighten over the next few frames.
+
+A first detector that looked for bright, condensed chromatin mostly found false events: neighbours crossing in, nuclei briefly dropping out of detection, and dying cells that fragment into very bright pieces. Rebuilding the detector around the dimming pattern and checking montages by eye gave this breakdown across the field (frames 0–19):
+
+| Label | Events |
+| --- | --- |
+| Confirmed-looking | 18 |
+| Plausible | 8 |
+| Ambiguous (mostly automated only) | 280 |
+| Rejected | 12 |
+
+### Results
+
+The upper colony scored highest at both window sizes. The densest colony, picked before divisions were checked by eye, fell well behind because most of its "divisions" were crossings or tracking errors. Scores use frames 0–19; corners are (x, y) of the top-left pixel.
+
+| Candidate | Size (px) | Confirmed + plausible divisions | Nuclei staying inside | Nuclei per frame | Score |
+| --- | --- | --- | --- | --- | --- |
+| **Upper colony (chosen): (2048, 320)** | 1024 | 4 + 3 | 78% | \~71 | 13.2 |
+| Upper colony, shifted left: (1920, 320) | 1024 | 3 + 3 | 80% | \~78 | 13.3 |
+| Upper colony, smaller: (2048, 384) | 768 | 3 + 3 | 75% | \~53 | 12.9 |
+| Middle colony: (1280, 2048) | 1024 | 4 + 2 | 78% | \~91 | 12.8 |
+| Lower colony (first pick): (1152, 2688) | 1024 | 2 + 0 | 91% | \~91 | 9.9 |
+
+The shifted-left window scores marginally higher but leaves out one confirmed division (E142), so the chosen window keeps all four.
+
+![Cell Regions Overview](images/overview_v2.png)
+
+&#91;image: Field at frame 10 with candidate crops and divisions marked\]
+
+*Frame 10, downsampled. Green = chosen 1024 crop, yellow = 768 alternative, red = middle colony, purple = lower colony (first pick). Cyan circles = confirmed-looking divisions, magenta = plausible.*
+
+**Divisions inside the chosen crop.** Positions are full-image pixels; subtract (2048, 320) for crop coordinates. Edge distance is for the mother or daughter nearest the boundary.
+
+### Candidate division events
 
 The following events were identified during crop selection. Coordinates are in the full source image.
 
-| Event | Current status | Rounds up or becomes dim | Daughters first appear | Approximate full-image position `(x, y)` |
-| --- | --- | --- | --- | --- |
-| `E002` | Confirmed-looking | Frames 1–2 | Frame 3 | `(2541, 674)` |
-| `E059` | Plausible | Frame 5 | Frame 6 | `(2283, 990)` |
-| `E094` | Confirmed-looking | Frames 7–8 | Frame 9 | `(2349, 647)` |
-| `E095` | Plausible | Frame 7 | Frame 8 | `(2645, 666)` |
-| `E142` | Confirmed-looking | Frame 9 | Frame 10 | `(2973, 773)` |
-| `E184` | Confirmed-looking | Frame 11 | Frame 12 | `(2561, 492)` |
-| `E170` | Plausible | Frames 10–12 | Frame 13 | `(2121, 1125)` |
+| Event | Label | Mother (frame: x, y) | Daughters (frame: x, y) | Daughters tracked after split (frames) | Distance to edge (px) |
+| --- | --- | --- | --- | --- | --- |
+| E002 | Confirmed-looking | 0: 2541, 674 | 3: (2535, 632), (2628, 690) | 16 / 4 | 312 |
+| E059 | Plausible | 4: 2283, 990 | 6: (2193, 928), (2254, 1048) | 13 / 13 | 145 |
+| E094 | Confirmed-looking | 6: 2349, 647 | 9: (2450, 622), (2368, 641) | 10 / 10 | 301 |
+| E095 | Plausible (dim neighbour may be the true mother) | 6: 2645, 666 | 8: (2586, 715), (2611, 637) | 11 / 11 | 299 |
+| E142 | Confirmed-looking | 8: 2973, 773 | 10: (2994, 829), (2942, 768) | 3 / 9 | 78 |
+| E170 | Plausible (dim for 3 frames, daughters overlap at first) | 9: 2121, 1125 | 13: (2135, 1107), (2185, 1097) | 6 / 6 | 73 |
+| E184 | Confirmed-looking | 10: 2561, 492 | 12: (2518, 470), (2513, 565) | 7 / 7 | 150 |
+
+![Montages of the seven divisions inside the chosen crop](images/recommended_crop_divisions.png)
+
+*Each row runs from two frames before the event to three after. Red = mother, yellow = rounded-up dim stage, green and blue = the two daughters.*
 
 In this movie, a dividing nucleus may become dim and spread out for one or two
 frames before two dim daughters appear and brighten. A candidate becomes a

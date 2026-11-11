@@ -40,4 +40,4 @@ Never overwrite the original movies. Conversion scripts should preserve metadata
 The fixed CLS 2D subset, automated initialization, correction conventions, and
 annotation status are documented in
 [`cls-2d-annotation.md`](ultrack/cls-2d-annotation.md). That guide links to the
-separate local macOS environment setup.
+local macOS section of the Ultrack setup guide.

@@ -31,7 +31,7 @@ promising approaches to UChicago stem-cell time-lapse microscopy data.
 6. [Reproducibility standards](docs/reproducibility.md)
 7. [UChicago data access](docs/uchicago-data.md)
 8. [Ultrack benchmark reproducibility](docs/ultrack/ultrack-reproducibility.md)
-9. [Local Ultrack and Cellpose setup on macOS](docs/ultrack/ultrack-local-macos.md)
+9. [Ultrack setup](docs/ultrack/ultrack-setup.md)
 10. [CLS 2D annotation pilot](docs/ultrack/cls-2d-annotation.md)
 11. [Published Ultrack benchmarks](docs/ultrack/ultrack-benchmarks.md)
 12. [Ultrack experiment results](docs/ultrack/ultrack-results.md)
