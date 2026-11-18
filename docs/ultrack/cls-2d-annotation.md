@@ -455,11 +455,12 @@ Before calling the subset complete:
 6. preserve the automated baseline so segmentation and tracking errors can be
    measured separately.
 
-Until lineage is validated, use `scripts/ultrack/evaluate_reviewed_subset.py`
-for preliminary comparisons. It reports object detection, boundary overlap,
-identity, and consecutive-link metrics while excluding unassigned reference
-objects. Do not label these values as official CTC `DET`, `SEG`, or `TRA`.
-Official CTC export and scoring remain pending.
+Use `scripts/annotation/export_provisional_ctc.py` to build the CTC `01_GT`
+and `01_RES` directories, then use `scripts/ultrack/evaluate_ctc_result.py`
+for `DET`, `SEG`, `TRA`, and `OP_CTB`. Until lineage and unresolved objects are
+reviewed, label these as provisional CTC metrics. The separate
+`evaluate_reviewed_subset.py` script remains useful for diagnostics that
+exclude unresolved objects, but its outputs are not CTC metrics.
 
 ## Preliminary Ultrack result
 
@@ -489,9 +490,45 @@ python scripts/ultrack/run_2d_benchmark.py \
 ```
 
 The run produced 1,490 tracked detections, 207 tracks, and 44 proposed lineage
-entries. The preliminary evaluator used an IoU threshold of `0.5`, excluded
-the 67 unassigned reference instances, and ignored unmatched predictions when
-at least half their pixels overlapped an unresolved reference object.
+entries. The provisional CTC export contains all 20 segmentation masks and the
+available tracking masks. Five non-contiguous reference IDs were split into
+separate CTC-valid spans. The 67 unresolved tracking instances are absent from
+`TRA`, and all reference parent IDs are currently `0` because divisions have
+not been validated.
+
+```bash
+python scripts/annotation/export_provisional_ctc.py \
+  --segmentation-dir external/annotations/cls-loose-colony/labels-working \
+  --tracking-dir external/annotations/cls-loose-colony/tracking-draft-mutual-best \
+  --result-dir external/runs/cls-frames0-19-ultrack-maxdist40-preliminary/CLS_RES \
+  --output-root external/ctc/cls-loose-colony-provisional-maxdist40 \
+  --sequence 01 \
+  --frames 20
+
+python scripts/ultrack/evaluate_ctc_result.py \
+  --ground-truth-dir external/ctc/cls-loose-colony-provisional-maxdist40/01_GT \
+  --result-dir external/ctc/cls-loose-colony-provisional-maxdist40/01_RES \
+  --output-dir external/ctc/cls-loose-colony-provisional-maxdist40/evaluation \
+  --dataset CLS-loose-colony-frames0-19-provisional \
+  --method cellpose-ultrack-maxdist40 \
+  --num-workers 1
+```
+
+`py-ctcmetrics==1.3.3` validated the exported `01_RES` and produced:
+
+| Provisional CTC measure | Result |
+| --- | ---: |
+| Valid | 1 |
+| DET | 0.950129 |
+| SEG | 0.910834 |
+| TRA | 0.943702 |
+| OP_CSB | 0.930482 |
+| OP_CTB | 0.927268 |
+
+The reviewed-subset evaluator was also retained as a secondary diagnostic. It
+used an IoU threshold of `0.5`, excluded the 67 unassigned reference instances,
+and ignored unmatched predictions when at least half their pixels overlapped
+an unresolved reference object.
 
 | Preliminary reviewed-subset measure | Result |
 | --- | ---: |
@@ -506,8 +543,10 @@ at least half their pixels overlapped an unresolved reference object.
 | Matched-link accuracy | 0.9674 |
 | Observed identity switches | 42 |
 
-These values are preliminary and assisted-reference metrics. They do not score
-division parent-child relationships, and they are not official CTC metrics.
+The CTC values and reviewed-subset diagnostics are preliminary because the
+reference is assisted, incomplete for 67 tracking instances, and has no
+validated division parent-child relationships. The CTC numbers must be rerun
+after mentor review and final lineage export.
 The earlier `max_distance=15` run is retained only as a historical note: its
 linking radius was too restrictive for the observed motion and it is not part
 of the main Week 7 result.
@@ -533,4 +572,5 @@ of the main Week 7 result.
 | Fresh preliminary Ultrack run | Complete | `max_distance=40`; 1,490 detections, 207 tracks, and 44 proposed lineage entries. |
 | Second-person review | Not started | Review divisions and a sample of corrected masks when possible. |
 | Preliminary evaluation | Complete | Reviewed-subset detection F1 `0.9715`, identity F1 `0.8657`, and consecutive-link recall `0.9230`. |
-| Official CTC evaluation | Pending | Requires validated lineage, final export, and official evaluator installation. |
+| Provisional CTC evaluation | Complete | `DET=0.950129`, `SEG=0.910834`, `TRA=0.943702`, and `OP_CTB=0.927268` with `py-ctcmetrics==1.3.3`. |
+| Final CTC evaluation | Pending | Rerun after mentor review, resolution of ambiguous instances, and validated lineage. |
