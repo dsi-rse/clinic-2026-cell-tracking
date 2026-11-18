@@ -66,6 +66,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Allow reuse of a nonempty output directory.",
     )
+    parser.add_argument(
+        "--max-distance",
+        type=float,
+        default=15.0,
+        help="Maximum centroid distance for linking cells between frames.",
+    )
     parser.add_argument("--contour-sigma", type=float, default=4.0)
 
     worker_group = parser.add_argument_group("Ultrack workers")
@@ -164,6 +170,8 @@ def validate_args(args: argparse.Namespace) -> None:
     )
     if any(count < MINIMUM_WORKER_COUNT for count in worker_counts):
         raise ValueError("All worker and thread counts must be at least 1.")
+    if args.max_distance <= 0:
+        raise ValueError("--max-distance must be greater than 0.")
     if args.contour_sigma < 0:
         raise ValueError("--contour-sigma must be nonnegative.")
     if args.watershed_h_minima <= 0:
@@ -350,6 +358,7 @@ def main() -> None:
     config.linking_config.n_workers = args.linking_workers
     config.tracking_config.n_threads = args.solver_threads
     config.tracking_config.solver_name = args.solver
+    config.linking_config.max_distance = args.max_distance
 
     tracker = Tracker(config=config)
 
@@ -381,6 +390,7 @@ def main() -> None:
         "linking_workers": args.linking_workers,
         "solver_threads": args.solver_threads,
         "solver": args.solver,
+        "max_distance": args.max_distance,
     }
     report["outputs"] = {
         "tracks_csv": str(tracks_path),

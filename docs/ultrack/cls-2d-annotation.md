@@ -17,15 +17,17 @@ checks in that section.
   - [How divisions look in this movie](#how-divisions-look-in-this-movie)
     - [Results](#results)
     - [Candidate division events](#candidate-division-events)
-  - [Prepare the fixed image subset in Fiji](#prepare-the-fixed-image-subset-in-fiji)
+  - [Prepare the fixed image subset](#prepare-the-fixed-image-subset)
   - [Automated initialization](#automated-initialization)
     - [Cellpose smoke test](#cellpose-smoke-test)
       - [Smoke-test result](#smoke-test-result)
       - [Visual inspection and cell-probability comparison](#visual-inspection-and-cell-probability-comparison)
       - [Provisional full-subset run at `-0.5`](#provisional-full-subset-run-at--05)
   - [Manual correction conventions](#manual-correction-conventions)
+  - [Implemented Napari workflow](#implemented-napari-workflow)
   - [Artifacts to preserve](#artifacts-to-preserve)
   - [Quality assurance and evaluation](#quality-assurance-and-evaluation)
+  - [Preliminary Ultrack result](#preliminary-ultrack-result)
   - [Current status](#current-status)
 
 
@@ -53,10 +55,10 @@ Treat the original movie as read-only.
 | Available frames | 21 |
 | Frame interval | 20 minutes |
 | Spatial crop | `x=2048`, `y=320`, width `1024`, height `1024` |
-| Data frame indices | 0 through 16 |
-| Fiji frame numbers | 1 through 17 |
-| Selected duration | 17 frames spanning 5 hours and 20 minutes |
-| Frames outside the pilot | Data frames 17–19 were omitted to reduce annotation work; frame 20 was excluded because it may follow an unusual time gap |
+| Data frame indices | 0 through 19 |
+| Fiji frame numbers | 1 through 20 |
+| Selected duration | 20 frames spanning 6 hours and 20 minutes |
+| Frames outside the pilot | Data frame 20 was excluded because it may follow an unusual time gap |
 | Downsampling | None |
 | Baseline Cellpose labels in smoke-test frames | 85, 88, and 82 in frames 0, 1, and 2; these are predictions, not ground-truth counts |
 
@@ -64,8 +66,8 @@ This region was selected because it combines a dense center with looser cells
 near the right and bottom edges, visible movement, and several candidate
 division events. Approximately 78 percent of the automatically tracked nuclei
 were estimated to remain within the crop during the earlier crop-selection
-analysis, before the interval was shortened to frames 0–16. These automated
-counts supported subset selection but do not constitute ground truth.
+analysis over frames 0–19. These automated counts supported subset selection
+but do not constitute ground truth.
 
 ### Selection criteria
 
@@ -147,32 +149,22 @@ confirmed annotated division only when one mother can be followed into two
 daughters and both daughters persist in later frames. Crossing cells,
 projection overlap, segmentation failure, and boundary entry must be ruled out.
 
-## Prepare the fixed image subset in Fiji
+## Prepare the fixed image subset
 
 Create the crop from the original TIFF, not from a screenshot or a
 contrast-adjusted export.
 
-1. Open the source movie in Fiji.
-2. Create the rectangle:
-
-   ```text
-   makeRectangle(2048, 320, 1024, 1024)
-   ```
-
-3. Use **Image -> Duplicate** and select Fiji frames 1 through 17.
-4. Preserve the original bit depth and do not apply display contrast to the
-   stored pixels.
-5. Export the subset as a TIFF image sequence for data frames 0 through 16.
-6. Verify that every image is 1024 by 1024 pixels and that exactly 17 frames
-   were exported.
-
-The current Fiji export uses descriptive source filenames. A `runner_input`
-subdirectory contains lightweight links normalized to `t000.tif` through
-`t016.tif`, which is the filename convention expected by the reusable 2D
-runner. The derived data are stored in the ignored local directory:
+The final crop was produced directly from the original movie with
+`scripts/annotation/crop_2d_movie.py`. The script applies the array slice
+`movie[0:20, 320:1344, 2048:3072]` and avoids manual frame selection or Fiji
+duplication. Verify that the output contains exactly 20 uint16 TIFFs, each
+shaped `1024 × 1024`:
 
 ```text
-external/data/cropped_movies_frame0_16/
+external/data/cropped_movies_frame0_19/runner_input/
+  t000.tif
+  ...
+  t019.tif
 ```
 
 Keep the image sequence and all derived outputs outside Git. Store the source
@@ -312,18 +304,18 @@ also introduces a genuine-looking temporal miss.
 #### Provisional full-subset run at `-0.5`
 
 An intermediate threshold of `-0.5` was selected as the provisional
-configuration for the weekly baseline. Cellpose was run over all 17 pilot
+configuration for the weekly baseline. Cellpose was run over all 20 selected
 frames while the model, automatic diameter, channels, flow threshold, and CPU
 setting remained unchanged.
 
 | Item | Recorded result |
 | --- | --- |
-| Frames | 0–16 |
+| Frames | 0–19 |
 | Cell-probability threshold | `-0.5` |
-| Label counts by frame | 0: 87; 1: 89; 2: 82; 3: 82; 4: 79; 5: 79; 6: 79; 7: 78; 8: 78; 9: 80; 10: 79; 11: 79; 12: 79; 13: 79; 14: 74; 15: 74; 16: 73 |
-| Instance-segmentation runtime | 297.08 seconds total |
-| Output | `external/runs/cls-cellpose-nuclei-cellprob-minus0p5-frames0-16/` |
-| Run report | `external/runs/cls-cellpose-nuclei-cellprob-minus0p5-frames0-16/run_report.json` |
+| Label counts by frame | 0: 87; 1: 89; 2: 82; 3: 82; 4: 79; 5: 79; 6: 79; 7: 78; 8: 78; 9: 80; 10: 79; 11: 79; 12: 79; 13: 79; 14: 74; 15: 74; 16: 73; 17: 70; 18: 71; 19: 76 |
+| Instance-segmentation runtime | 347.97 seconds total |
+| Output | `external/runs/cls-cellpose-nuclei-cellprob-minus0p5-frames0-19/` |
+| Run report | `external/runs/cls-cellpose-nuclei-cellprob-minus0p5-frames0-19/run_report.json` |
 
 For the three frames shared with the earlier smoke tests, `-0.5` produced two
 additional non-overlapping masks in frame 0, one in frame 1, and no new object
@@ -333,7 +325,7 @@ Compared with threshold `0.0`, foreground disagreement was approximately
 large faint frame-0 nucleus lost at threshold `-1.0` remained segmented at
 `-0.5`.
 
-The object count decreases from 87–89 near the start to 73 in frame 16. These
+The object count decreases from 87–89 near the start to 70 in frame 17. These
 are predicted instance counts rather than ground truth; the trend must be
 checked across the image sequence to distinguish genuine crop entry or exit
 from missed faint nuclei, mergers, or other segmentation changes. The `-0.5`
@@ -363,6 +355,65 @@ the mentor as ambiguous examples are encountered:
   because changed masks can alter centroids and links.
 - Record every unresolved object, division, or boundary event in an annotation
   log.
+
+## Implemented Napari workflow
+
+The working annotation is an assisted reference rather than an independently
+drawn ground truth. Its provenance is:
+
+```text
+Cellpose nuclei, cellprob_threshold=-0.5
+    -> manual segmentation correction
+Ultrack max_distance=50 seed identities
+    -> transfer onto corrected boundaries
+    -> manual identity correction
+```
+
+The editable segmentation masks are in
+`external/annotations/cls-loose-colony/labels-working/`. The tracking draft is
+in `external/annotations/cls-loose-colony/tracking-draft-mutual-best/`.
+Automated run outputs remain unchanged under `external/runs/`.
+
+Open the annotation viewer with:
+
+```bash
+python scripts/annotation/open_annotation_napari.py
+```
+
+The viewer loads the raw frames, corrected instance masks, tracking draft, and
+the original Ultrack tracks in explicit numerical frame order. The main
+controls are:
+
+| Key | Layer and action |
+| --- | --- |
+| `N` | On `freehand-annotations`, commit each shape as a new segmentation object. |
+| `E` | Extend the selected existing segmentation object into one freehand shape. |
+| `A` | Assign the selected existing track ID to the complete selected segmentation object. |
+| `R` | Assign the selected segmentation object a new track ID. |
+| `X` | Clear the selected object's tracking assignment. |
+| Physical `Control+S` | Atomically save all segmentation and tracking masks plus the checkpoint metadata. |
+
+The `tracking-needs-review` layer outlines segmentation objects without a
+track ID in magenta. Track assignment always uses the complete corrected
+segmentation boundary; it does not require redrawing the nucleus. The
+`ultrack-seed-tracks` layer is a visual reference only and does not update
+during manual edits.
+
+The initial tracking draft transferred a seed ID only when the corrected
+segment and seed track were mutual-best overlaps, with IoU at least `0.5` and
+overlap dominance at least `0.8`. This assigned 1,487 of 1,615 frame-level
+nucleus instances automatically. After manual work, 1,548 instances have a
+track ID and 67 remain unresolved, giving 95.85% provisional tracking coverage.
+The unresolved cases are retained for mentor review because their segmentation
+or identity is ambiguous.
+
+Current checkpoint limitations:
+
+- division parent-child relationships have not been manually validated;
+- `res_track.txt` is not updated by the Napari checkpoint saver;
+- the tracking reference was initialized from the `max_distance=50` result, so
+  that same run cannot be treated as an independent evaluation; and
+- ambiguous unassigned objects must be excluded from preliminary metrics.
 
 ## Artifacts to preserve
 
@@ -404,26 +455,82 @@ Before calling the subset complete:
 6. preserve the automated baseline so segmentation and tracking errors can be
    measured separately.
 
-The exact evaluation format and metrics will be added after confirming how the
-corrected Napari labels and lineage are exported.
+Until lineage is validated, use `scripts/ultrack/evaluate_reviewed_subset.py`
+for preliminary comparisons. It reports object detection, boundary overlap,
+identity, and consecutive-link metrics while excluding unassigned reference
+objects. Do not label these values as official CTC `DET`, `SEG`, or `TRA`.
+Official CTC export and scoring remain pending.
+
+## Preliminary Ultrack result
+
+A fresh comparison run used `max_distance=40`. This value was not used to
+initialize the tracking reference; the `max_distance=50` seed run is therefore
+kept as provenance rather than presented as the main result. All other Cellpose
+and Ultrack settings matched the recorded full workflow.
+
+```bash
+NUMBA_CACHE_DIR=/private/tmp/ultrack-numba-cache \
+python scripts/ultrack/run_2d_benchmark.py \
+  --input-dir external/data/cropped_movies_frame0_19/runner_input \
+  --output-dir external/runs/cls-frames0-19-ultrack-maxdist40-preliminary \
+  --sequence CLS \
+  --method cellpose \
+  --frame-start 0 \
+  --frame-stop 20 \
+  --max-distance 40 \
+  --contour-sigma 4 \
+  --segmentation-workers 4 \
+  --linking-workers 1 \
+  --solver-threads 4 \
+  --solver GUROBI \
+  --cellpose-model nuclei \
+  --cellpose-flow-threshold 0.4 \
+  --cellpose-cellprob-threshold -0.5
+```
+
+The run produced 1,490 tracked detections, 207 tracks, and 44 proposed lineage
+entries. The preliminary evaluator used an IoU threshold of `0.5`, excluded
+the 67 unassigned reference instances, and ignored unmatched predictions when
+at least half their pixels overlapped an unresolved reference object.
+
+| Preliminary reviewed-subset measure | Result |
+| --- | ---: |
+| Annotation coverage | 0.9585 |
+| Detection precision | 0.9959 |
+| Detection recall | 0.9483 |
+| Detection F1 | 0.9715 |
+| Mean IoU among matched objects | 0.9925 |
+| Reference-averaged IoU | 0.9412 |
+| Identity F1 | 0.8657 |
+| Consecutive-link recall | 0.9230 |
+| Matched-link accuracy | 0.9674 |
+| Observed identity switches | 42 |
+
+These values are preliminary and assisted-reference metrics. They do not score
+division parent-child relationships, and they are not official CTC metrics.
+The earlier `max_distance=15` run is retained only as a historical note: its
+linking radius was too restrictive for the observed motion and it is not part
+of the main Week 7 result.
 
 ## Current status
 
 | Step | Status | Notes |
 | --- | --- | --- |
 | Source movie selected | Complete | Loose-colony H2B maximum-projection movie. |
-| Crop and frame range selected | Complete | `1024 × 1024` crop at `x=2048`, `y=320`; data frames 0–16. |
+| Crop and frame range selected | Complete | `1024 × 1024` crop at `x=2048`, `y=320`; data frames 0–19. |
 | Anomalous final frame excluded | Complete | Data frame 20 was excluded because it may follow an unusual time gap. |
 | Local software environment verified | Complete | Apple Silicon environment, Napari, Ultrack, and Gurobi checks passed. |
-| Raw subset exported from Fiji | Complete | 17 uint16 frames, indexed 0–16. |
-| Runner-compatible frame names prepared | Complete | `t000.tif`–`t016.tif` in `runner_input`. |
+| Raw subset exported by script | Complete | 20 uint16 frames, indexed 0–19. |
+| Runner-compatible frame names prepared | Complete | `t000.tif`–`t019.tif` in `runner_input`. |
 | Cellpose smoke test | Complete | Labels saved for frames 0–2; counts were 85, 88, and 82. |
 | Cellpose smoke-test visual inspection | Complete | The baseline missed some faint nuclei; threshold `-1.0` recovered some masks but lost a large faint nucleus in frame 0. |
 | Cellpose configuration selected | Complete | Threshold `-0.5` is the provisional weekly baseline and can be revised after review. |
-| Full-subset Cellpose run | Complete | Frames 0–16 were processed; predicted counts ranged from 73 to 89. |
-| Full-subset segmentation review | Pending | Inspect all frames, especially the decline in predicted counts toward frames 14–16. |
-| Ultrack baseline run | Not started | Begin after accepting the Cellpose configuration. |
-| Segmentation correction | Not started | Correct the accepted automated masks in Napari. |
-| Tracking and division correction | Not started | Correct identities, links, starts, ends, and divisions. |
+| Full-subset Cellpose run | Complete | Frames 0–19 were processed; predicted counts ranged from 70 to 89. |
+| Full-subset segmentation review | Provisional complete | Clear missing nuclei and boundary errors were corrected; ambiguous cases remain for mentor review. |
+| Tracking seed | Complete | `max_distance=50` identities were transferred onto corrected boundaries using documented mutual-best overlap rules. |
+| Tracking correction | In progress | 1,548/1,615 frame-level instances have IDs; 67 ambiguous instances remain unassigned. |
+| Division correction | Pending mentor review | Parent-child lineage has not been validated or exported. |
+| Fresh preliminary Ultrack run | Complete | `max_distance=40`; 1,490 detections, 207 tracks, and 44 proposed lineage entries. |
 | Second-person review | Not started | Review divisions and a sample of corrected masks when possible. |
-| Evaluation | Not started | Final format and metrics depend on the corrected export. |
+| Preliminary evaluation | Complete | Reviewed-subset detection F1 `0.9715`, identity F1 `0.8657`, and consecutive-link recall `0.9230`. |
+| Official CTC evaluation | Pending | Requires validated lineage, final export, and official evaluator installation. |
